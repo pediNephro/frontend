@@ -1,0 +1,178 @@
+
+<div class="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10">
+  
+  <!-- Page Header -->
+  <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h2 class="text-title-md2 font-bold text-black dark:text-white">
+        Medical Notes
+      </h2>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+        {{ filteredNotes.length }} total notes
+      </p>
+    </div>
+    
+    <nav>
+      <ol class="flex items-center gap-2">
+        <li><a class="font-medium" routerLink="/">Dashboard /</a></li>
+        <li class="font-medium text-primary">Medical Notes</li>
+      </ol>
+    </nav>
+  </div>
+
+  <!-- Success/Error Alerts -->
+  <div *ngIf="successMessage" class="mb-4 flex w-full border-l-6 border-green-500 bg-green-100 dark:bg-green-900/30 px-7 py-4 shadow-md">
+    <div class="mr-5 flex h-9 w-9 items-center justify-center rounded-lg bg-green-500">
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="none"><path d="M15.2984 0.826822L15.2868 0.811827L15.2741 0.797751C14.9173 0.401867 14.3238 0.400754 13.9657 0.794406L5.91888 9.45376L2.05667 5.2868C1.69856 4.89287 1.10487 4.89389 0.747996 5.28987C0.417335 5.65675 0.417335 6.22337 0.747996 6.59026L4.86742 11.0348C5.14445 11.3405 5.52858 11.5 5.89581 11.5C6.29242 11.5 6.65178 11.3355 6.92401 11.035L15.2162 2.11161C15.5833 1.74452 15.576 1.18615 15.2984 0.826822Z" fill="white" stroke="white"/></svg>
+    </div>
+    <div class="w-full">
+      <h5 class="mb-1 text-lg font-bold text-green-800 dark:text-green-400">Success</h5>
+      <p class="text-base text-green-700 dark:text-green-300">{{ successMessage }}</p>
+    </div>
+  </div>
+
+  <div *ngIf="error" class="mb-4 flex w-full border-l-6 border-red-500 bg-red-100 dark:bg-red-900/30 px-7 py-4 shadow-md">
+    <div class="mr-5 flex h-9 w-9 items-center justify-center rounded-lg bg-red-500">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.4917 7.65579L11.106 12.2645C11.2545 12.4128 11.4715 12.5 11.6738 12.5C11.8762 12.5 12.0931 12.4128 12.2416 12.2645C12.5621 11.9445 12.5623 11.4317 12.2423 11.1114L7.64539 6.50351L12.2589 1.91221C12.5802 1.59132 12.5802 1.07805 12.2595 0.757793C11.9393 0.437994 11.4268 0.437869 11.1064 0.757418L6.49234 5.34931L1.89459 0.740581C1.57364 0.420019 1.0608 0.420019 0.740487 0.739944C0.42005 1.05999 0.419837 1.57279 0.73985 1.89309L6.4917 7.65579Z" fill="white" stroke="white"/></svg>
+    </div>
+    <div class="w-full">
+      <h5 class="mb-1 text-lg font-bold text-red-800 dark:text-red-400">Error</h5>
+      <p class="text-base text-red-700 dark:text-red-300">{{ error }}</p>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="mb-6 rounded-sm border border-stroke bg-white p-4 shadow-default dark:border-strokedark dark:bg-boxdark">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      
+      <!-- Search -->
+      <div>
+        <label class="mb-2 block text-sm font-medium text-black dark:text-white">Search</label>
+        <input type="text" [(ngModel)]="searchTerm" (input)="onSearch()" placeholder="Search content or author..." class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary dark:border-form-strokedark dark:bg-form-input dark:text-white"/>
+      </div>
+
+      <!-- Author Filter -->
+      <div>
+        <label class="mb-2 block text-sm font-medium text-black dark:text-white">Author</label>
+        <select [(ngModel)]="filterAuthorId" (change)="applyFilters()" class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary dark:border-form-strokedark dark:bg-form-input dark:text-white">
+          <option [value]="null">All Authors</option>
+          <option *ngFor="let authorId of getUniqueAuthors()" [value]="authorId">
+            Author ID: {{ authorId }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex items-end gap-2">
+        <button (click)="clearFilters()" class="flex-1 rounded border border-stroke px-5 py-3 text-black hover:bg-gray-2 dark:border-strokedark dark:text-white">
+          Clear
+        </button>
+        <button routerLink="/medical-notes/new" class="flex-1 rounded bg-primary px-5 py-3 text-white hover:bg-opacity-90">
+          Add Note
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="flex h-96 items-center justify-center">
+    <div class="h-16 w-16 animate-spin rounded-full border-4 border-solid border-primary border-t-transparent"></div>
+  </div>
+
+  <!-- Notes Grid -->
+  <div *ngIf="!loading">
+    
+    <!-- Empty State -->
+    <div *ngIf="filteredNotes.length === 0" class="flex flex-col items-center justify-center rounded-sm border border-stroke bg-white py-16 shadow-default dark:border-strokedark dark:bg-boxdark">
+      <svg class="mb-4 h-16 w-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+      </svg>
+      <h3 class="mb-2 text-xl font-semibold text-black dark:text-white">No Medical Notes Found</h3>
+      <p class="mb-6 text-gray-500 dark:text-gray-400">Start documenting by creating your first note</p>
+      <button routerLink="/medical-notes/new" class="inline-flex items-center gap-2 rounded-md bg-primary px-6 py-3 text-white hover:bg-opacity-90">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <path d="M10 4.16667V15.8333M4.16667 10H15.8333" stroke="white" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        Create First Note
+      </button>
+    </div>
+
+    <!-- Notes Cards -->
+    <div *ngIf="filteredNotes.length > 0" class="grid grid-cols-1 gap-6">
+      
+      <div *ngFor="let note of paginatedNotes" class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+        <div class="flex items-center justify-between border-b border-stroke px-6 py-4 dark:border-strokedark">
+          <div class="flex items-center gap-3">
+            <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+              <svg class="fill-primary" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M15.8333 2.5H4.16667C3.25 2.5 2.5 3.25 2.5 4.16667V15.8333C2.5 16.75 3.25 17.5 4.16667 17.5H15.8333C16.75 17.5 17.5 16.75 17.5 15.8333V4.16667C17.5 3.25 16.75 2.5 15.8333 2.5ZM15.8333 15.8333H4.16667V4.16667H15.8333V15.8333ZM5.83333 7.5H14.1667V9.16667H5.83333V7.5ZM5.83333 10.8333H14.1667V12.5H5.83333V10.8333Z"/>
+              </svg>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-gray-500 dark:text-gray-400">
+                Author ID: {{ note.authorId }}
+              </p>
+              <p class="text-xs text-gray-400 dark:text-gray-500">
+                {{ formatDate(note.creationDate) }}
+              </p>
+            </div>
+          </div>
+          
+          <div class="flex items-center gap-3">
+            <span *ngIf="note.vitalSignId" class="inline-flex rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-300">
+              📊 Linked to VS #{{ note.vitalSignId }}
+            </span>
+            
+            <button [routerLink]="['/medical-notes', note.id, 'edit']" class="hover:text-primary" title="Edit">
+              <svg class="fill-current" width="18" height="18" viewBox="0 0 18 18">
+                <path d="M15.3 1.05c.9.9.9 2.4 0 3.3l-1.8 1.8L10.2 2.85l1.8-1.8c.9-.9 2.4-.9 3.3 0zM2.25 14.85l-.9 3.6c-.1.3.3.7.6.6l3.6-.9 8.7-8.7-3.3-3.3-8.7 8.7z" fill="currentColor"/>
+              </svg>
+            </button>
+            
+            <button (click)="openDeleteModal(note)" class="hover:text-danger" title="Delete">
+              <svg class="fill-current" width="18" height="18" viewBox="0 0 18 18">
+                <path d="M13.7535 2.47502H11.5879V1.9969C11.5879 1.15315 10.9129 0.478149 10.0691 0.478149H7.90352C7.05977 0.478149 6.38477 1.15315 6.38477 1.9969V2.47502H4.21914C3.40352 2.47502 2.72852 3.15002 2.72852 3.96565V4.8094C2.72852 5.42815 3.09414 5.9344 3.62852 6.1594L4.07852 15.4688C4.13477 16.6219 5.09102 17.5219 6.24414 17.5219H11.7004C12.8535 17.5219 13.8098 16.6219 13.866 15.4688L14.3441 6.13127C14.8785 5.90627 15.2441 5.3719 15.2441 4.78127V3.93752C15.2441 3.15002 14.5691 2.47502 13.7535 2.47502Z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        
+        <div class="p-6">
+          <p class="text-base leading-relaxed text-black dark:text-white">
+            {{ truncateContent(note.content, 300) }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div *ngIf="filteredNotes.length > 0" class="mt-6 flex flex-col items-center justify-between gap-4 rounded-sm border border-stroke bg-white px-4 py-4 shadow-default dark:border-strokedark dark:bg-boxdark sm:flex-row">
+      <p class="text-sm text-black dark:text-white">
+        Showing {{ (currentPage - 1) * itemsPerPage + 1 }} to {{ currentPage * itemsPerPage > filteredNotes.length ? filteredNotes.length : currentPage * itemsPerPage }} of {{ filteredNotes.length }} entries
+      </p>
+      <div class="flex items-center gap-2">
+        <button (click)="previousPage()" [disabled]="currentPage === 1" class="rounded border border-stroke px-3 py-1 hover:bg-gray-2 disabled:opacity-50 dark:border-strokedark dark:text-white">Previous</button>
+        <button *ngFor="let page of pageNumbers" (click)="goToPage(page)" [class.bg-primary]="page === currentPage" [class.text-white]="page === currentPage" class="rounded border border-stroke px-3 py-1 hover:bg-gray-2 dark:border-strokedark dark:text-white">{{ page }}</button>
+        <button (click)="nextPage()" [disabled]="currentPage === totalPages" class="rounded border border-stroke px-3 py-1 hover:bg-gray-2 disabled:opacity-50 dark:border-strokedark dark:text-white">Next</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Modal -->
+  <div *ngIf="showDeleteModal" class="fixed inset-0 z-999999 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="w-full max-w-md rounded-lg bg-white p-6 shadow-lg dark:bg-boxdark">
+      <h3 class="mb-4 text-xl font-bold text-black dark:text-white">Delete Medical Note</h3>
+      <p class="mb-6 text-sm text-black dark:text-white">Are you sure you want to delete this medical note? This action cannot be undone.</p>
+      <div *ngIf="noteToDelete" class="mb-6 rounded bg-gray-2 p-4 dark:bg-meta-4">
+        <p class="text-sm text-black dark:text-white"><strong>Author:</strong> {{ noteToDelete.authorId }}</p>
+        <p class="text-sm text-black dark:text-white"><strong>Date:</strong> {{ formatDate(noteToDelete.creationDate) }}</p>
+        <p class="mt-2 text-sm text-black dark:text-white">{{ truncateContent(noteToDelete.content, 100) }}</p>
+      </div>
+      <div class="flex justify-end gap-3">
+        <button (click)="closeDeleteModal()" class="rounded border border-stroke px-5 py-2.5 text-black hover:bg-gray-2 dark:border-strokedark dark:text-white">Cancel</button>
+        <button (click)="confirmDelete()" class="rounded bg-red-500 px-5 py-2.5 text-white hover:bg-red-600">Delete</button>
+      </div>
+    </div>
+  </div>
+
+</div>

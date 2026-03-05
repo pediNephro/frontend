@@ -1,0 +1,147 @@
+<!-- complication-detail.component.html -->
+<div class="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10">
+
+  <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <h2 class="text-title-md2 font-bold text-black dark:text-white">Complication Detail</h2>
+    <nav>
+      <ol class="flex items-center gap-2">
+        <li><a class="font-medium" routerLink="/">Dashboard /</a></li>
+        <li><a class="font-medium" routerLink="/kidney-transplants">Kidney Transplants /</a></li>
+        <li class="font-medium text-blue-500">Complication</li>
+      </ol>
+    </nav>
+  </div>
+
+  <div *ngIf="isLoading" class="flex items-center justify-center py-24">
+    <span class="h-10 w-10 animate-spin rounded-full border-4 border-solid border-primary border-t-transparent"></span>
+  </div>
+
+  <div *ngIf="error && !isLoading" class="flex w-full border-l-6 border-red-500 bg-red-100 dark:bg-red-900/30 px-7 py-4 shadow-md">
+    <p class="text-red-700 dark:text-red-300">{{ error }}</p>
+  </div>
+
+  <ng-container *ngIf="complication && !isLoading">
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+
+      <!-- Left: Details -->
+      <div class="lg:col-span-2 space-y-6">
+
+        <!-- Complication Info Card -->
+        <div class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+          <div class="border-b border-stroke px-6 py-4 dark:border-strokedark flex items-center justify-between">
+            <h3 class="font-medium text-black dark:text-white">Complication Information</h3>
+            <div class="flex gap-2">
+              <span class="inline-flex rounded-full px-3 py-1 text-sm font-semibold" [ngClass]="getSeverityClass(complication.severity)">
+                {{ complication.severity }}
+              </span>
+              <span class="inline-flex rounded-full px-3 py-1 text-sm font-semibold" [ngClass]="getStatusClass(complication.status)">
+                {{ complication.status }}
+              </span>
+            </div>
+          </div>
+          <div class="p-6">
+            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+
+              <!-- Type -->
+              <div>
+                <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">Type</p>
+                <p class="text-sm font-medium text-black dark:text-white">{{ complication.complicationType.replace(/_/g, ' ') }}</p>
+              </div>
+
+              <!-- Sub Type -->
+              <div *ngIf="complication.subType">
+                <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">Sub Type</p>
+                <p class="text-sm font-medium text-black dark:text-white">{{ complication.subType }}</p>
+              </div>
+
+              <!-- Appearance Date -->
+              <div>
+                <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">Appearance Date</p>
+                <p class="text-sm font-medium text-black dark:text-white">{{ complication.appearanceDate | date:'dd MMM yyyy' }}</p>
+              </div>
+
+              <!-- Resolution Date -->
+              <div *ngIf="complication.resolutionDate">
+                <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">Resolution Date</p>
+                <p class="text-sm font-medium text-black dark:text-white">{{ complication.resolutionDate | date:'dd MMM yyyy' }}</p>
+              </div>
+
+              <!-- Created At -->
+              <div>
+                <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">Recorded On</p>
+                <p class="text-sm font-medium text-black dark:text-white">{{ complication.createdAt | date:'dd MMM yyyy' }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Description Card -->
+        <div class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+          <div class="border-b border-stroke px-6 py-4 dark:border-strokedark">
+            <h3 class="font-medium text-black dark:text-white">Description</h3>
+          </div>
+          <div class="p-6">
+            <p class="text-sm leading-relaxed text-black dark:text-white whitespace-pre-line">{{ complication.description }}</p>
+          </div>
+        </div>
+
+        <!-- Treatment Card -->
+        <div *ngIf="complication.treatment" class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+          <div class="border-b border-stroke px-6 py-4 dark:border-strokedark">
+            <h3 class="font-medium text-black dark:text-white">Treatment</h3>
+          </div>
+          <div class="p-6">
+            <p class="text-sm leading-relaxed text-black dark:text-white whitespace-pre-line">{{ complication.treatment }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Actions -->
+      <div class="space-y-6">
+
+        <!-- Quick Actions -->
+        <div class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+          <div class="border-b border-stroke px-6 py-4 dark:border-strokedark">
+            <h3 class="font-medium text-black dark:text-white">Actions</h3>
+          </div>
+          <div class="p-6 space-y-3">
+            <a
+              [routerLink]="['/kidney-transplants', complication.transplantId, 'complications', complication.id, 'edit']"
+              class="flex w-full items-center justify-center gap-2 rounded-md border border-stroke px-4 py-2 text-sm font-medium text-black hover:bg-gray-1 dark:border-strokedark dark:text-white dark:hover:bg-meta-4"
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M11 5H5V11H11V5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M8 3V5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M8 11V13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Edit Complication
+            </a>
+            <a
+              [routerLink]="['/kidney-transplants', complication.transplantId, 'complications']"
+              class="flex w-full items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-black hover:bg-opacity-90"
+            >
+              ← Back to List
+            </a>
+          </div>
+        </div>
+
+        <!-- Transplant Info -->
+        <div class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+          <div class="border-b border-stroke px-6 py-4 dark:border-strokedark">
+            <h3 class="font-medium text-black dark:text-white">Related Transplant</h3>
+          </div>
+          <div class="p-6">
+            <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">Transplant ID</p>
+            <p class="text-sm font-medium text-black dark:text-white mb-3">{{ complication.transplantId }}</p>
+            <a
+              [routerLink]="['/transplant', complication.transplantId]"
+              class="inline-flex items-center gap-1 text-sm text-blue-500 hover:underline"
+            >
+              View Transplant Details →
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</div>

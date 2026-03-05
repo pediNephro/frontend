@@ -1,0 +1,74 @@
+<!-- biopsy-list.component.html -->
+<div class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+
+  <div class="border-b border-stroke px-6 py-4 dark:border-strokedark flex items-center justify-between">
+    <h3 class="font-medium text-black dark:text-white">Renal Biopsies</h3>
+    <a
+      [routerLink]="['biopsies', 'new']"
+      class="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-black hover:bg-opacity-90"
+    >
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M8 3v10M3 8h10" stroke="white" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      Add Biopsy
+    </a>
+  </div>
+
+  <div *ngIf="isLoading" class="flex items-center justify-center py-16">
+    <span class="h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-t-transparent"></span>
+  </div>
+
+  <div *ngIf="error && !isLoading" class="px-6 py-8 text-center text-red-500">{{ error }}</div>
+
+  <div *ngIf="!isLoading && !error && biopsies.length === 0" class="flex flex-col items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+    <svg class="mb-3 h-12 w-12 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/>
+    </svg>
+    <p class="text-sm">No biopsies recorded</p>
+  </div>
+
+  <div *ngIf="!isLoading && biopsies.length > 0" class="overflow-x-auto">
+    <table class="w-full table-auto">
+      <thead>
+        <tr class="bg-gray-2 text-left dark:bg-meta-4">
+          <th class="px-6 py-4 text-sm font-medium text-black dark:text-white">Date</th>
+          <th class="px-6 py-4 text-sm font-medium text-black dark:text-white">Indication</th>
+          <th class="px-6 py-4 text-sm font-medium text-black dark:text-white">Banff t / i / g</th>
+          <th class="px-6 py-4 text-sm font-medium text-black dark:text-white">Category</th>
+          <th class="px-6 py-4 text-sm font-medium text-black dark:text-white">Report</th>
+          <th class="px-6 py-4 text-sm font-medium text-black dark:text-white">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          *ngFor="let b of biopsies"
+          class="border-t border-stroke dark:border-strokedark hover:bg-gray-1 dark:hover:bg-meta-4 transition-colors"
+        >
+          <td class="px-6 py-4 text-sm text-black dark:text-white">{{ b.biopsyDate | date:'dd MMM yyyy' }}</td>
+          <td class="px-6 py-4 text-sm text-black dark:text-white">{{ b.indication.replace(/_/g, ' ') }}</td>
+          <td class="px-6 py-4">
+            <div class="flex items-center gap-1.5">
+              <span class="flex h-6 w-6 items-center justify-center rounded bg-gray-100 text-xs font-bold text-black dark:bg-meta-4 dark:text-white">{{ b.banffScoreT }}</span>
+              <span class="text-gray-400">/</span>
+              <span class="flex h-6 w-6 items-center justify-center rounded bg-gray-100 text-xs font-bold text-black dark:bg-meta-4 dark:text-white">{{ b.banffScoreI }}</span>
+              <span class="text-gray-400">/</span>
+              <span class="flex h-6 w-6 items-center justify-center rounded bg-gray-100 text-xs font-bold text-black dark:bg-meta-4 dark:text-white">{{ b.banffScoreG }}</span>
+            </div>
+          </td>
+          <td class="px-6 py-4">
+            <span class="inline-flex rounded-full px-3 py-1 text-xs font-medium" [ngClass]="getBanffClass(b.banffCategory)">
+              {{ b.banffCategory }}
+            </span>
+          </td>
+          <td class="px-6 py-4">
+            <a *ngIf="b.reportPath" [href]="b.reportPath" target="_blank" class="text-blue-500 hover:underline text-sm">PDF ↗</a>
+            <span *ngIf="!b.reportPath" class="text-xs text-gray-400">—</span>
+          </td>
+          <td class="px-6 py-4">
+            <a [routerLink]="['biopsies', b.id]" class="text-blue-500 hover:underline text-sm font-medium">View</a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

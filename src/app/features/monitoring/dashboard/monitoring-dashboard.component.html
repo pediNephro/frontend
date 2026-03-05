@@ -1,0 +1,130 @@
+<div class="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10">
+  <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <h2 class="text-title-md2 font-bold text-black dark:text-white">Monitoring Dashboard</h2>
+    <nav>
+      <ol class="flex items-center gap-2">
+        <li><a class="font-medium" routerLink="/">Dashboard /</a></li>
+        <li class="font-medium text-primary">Monitoring</li>
+      </ol>
+    </nav>
+  </div>
+
+  <div class="grid grid-cols-12 gap-4 md:gap-6">
+    <!-- Alerts summary -->
+    <div class="col-span-12 sm:col-span-6 xl:col-span-4">
+      <div class="rounded-lg border border-stroke bg-white p-6 shadow-default dark:border-strokedark dark:bg-boxdark">
+        <div class="mb-4 flex items-center justify-between">
+          <h3 class="text-lg font-semibold text-black dark:text-white">Patient Alerts</h3>
+          <a routerLink="/patient-alerts" class="text-sm font-medium text-primary hover:underline">View all</a>
+        </div>
+        @if (alertNotification.isLoading()) {
+          <div class="flex h-32 items-center justify-center"><span class="text-gray-500">Loading...</span></div>
+        } @else {
+          <div class="flex gap-4">
+            <div class="flex-1 rounded-lg bg-orange-50 p-4 dark:bg-orange-900/20">
+              <p class="text-2xl font-bold text-orange-700 dark:text-orange-400">{{ alertNotification.count() }}</p>
+              <p class="text-sm text-orange-600 dark:text-orange-300">Unacknowledged</p>
+            </div>
+            <div class="flex-1 rounded-lg bg-red-50 p-4 dark:bg-red-900/20">
+              <p class="text-2xl font-bold text-red-700 dark:text-red-400">{{ alertNotification.criticalCount() }}</p>
+              <p class="text-sm text-red-600 dark:text-red-300">Critical</p>
+            </div>
+          </div>
+          <ul class="mt-4 max-h-48 space-y-2 overflow-y-auto">
+            @for (a of alertNotification.alerts().slice(0, 8); track a.id) {
+              <li>
+                <a [routerLink]="['/patient-alerts', a.id]" class="block rounded border border-stroke p-2 hover:bg-gray-2 dark:border-strokedark dark:hover:bg-meta-4">
+                  <span [class]="alertNotification.getSeverityClass(a.severity)" class="mr-2 inline-flex rounded px-1.5 py-0.5 text-xs font-medium">{{ a.severity }}</span>
+                  <span class="text-sm text-black dark:text-white">Patient {{ a.patientId }}: {{ a.message | slice:0:50 }}{{ a.message.length > 50 ? '…' : '' }}</span>
+                  <span class="mt-1 block text-xs text-gray-500">{{ alertNotification.formatDate(a.generationDate) }}</span>
+                </a>
+              </li>
+            }
+            @if (alertNotification.alerts().length === 0) {
+              <li class="py-4 text-center text-sm text-gray-500">No unacknowledged alerts</li>
+            }
+          </ul>
+        }
+      </div>
+    </div>
+
+    <!-- Latest vitals -->
+    <div class="col-span-12 xl:col-span-8">
+      <div class="rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+        <div class="border-b border-stroke px-4 py-4 dark:border-strokedark">
+          <div class="flex items-center justify-between">
+            <h3 class="font-semibold text-black dark:text-white">Latest Vital Signs</h3>
+            <a routerLink="/vital-signs" class="text-sm font-medium text-primary hover:underline">View all</a>
+          </div>
+        </div>
+        @if (vitalsLoading) {
+          <div class="flex h-48 items-center justify-center"><span class="text-gray-500">Loading...</span></div>
+        } @else {
+          <div class="overflow-x-auto">
+            <table class="w-full table-auto text-left text-sm">
+              <thead>
+                <tr class="bg-gray-2 dark:bg-meta-4">
+                  <th class="px-4 py-3 font-medium text-black dark:text-white">Patient</th>
+                  <th class="px-4 py-3 font-medium text-black dark:text-white">Date</th>
+                  <th class="px-4 py-3 font-medium text-black dark:text-white">BP</th>
+                  <th class="px-4 py-3 font-medium text-black dark:text-white">HR</th>
+                  <th class="px-4 py-3 font-medium text-black dark:text-white">SpO2</th>
+                  <th class="px-4 py-3 font-medium text-black dark:text-white">Weight</th>
+                  <th class="px-4 py-3 font-medium text-black dark:text-white"></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (vs of latestVitals; track vs.id) {
+                  <tr class="border-b border-stroke dark:border-strokedark hover:bg-gray-2 dark:hover:bg-meta-4">
+                    <td class="px-4 py-3 font-medium text-black dark:text-white">{{ vs.patientId }}</td>
+                    <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ formatDate(vs.measurementDate) }}</td>
+                    <td class="px-4 py-3">
+                      @if (vs.systolicBP != null && vs.diastolicBP != null) {
+                        <span [class]="getBPClass(vs.systolicBP, vs.diastolicBP)" class="rounded px-2 py-0.5 text-xs">{{ vs.systolicBP }}/{{ vs.diastolicBP }}</span>
+                      } @else {
+                        <span class="text-gray-400">—</span>
+                      }
+                    </td>
+                    <td class="px-4 py-3 text-black dark:text-white">{{ vs.heartRate ?? '—' }}</td>
+                    <td class="px-4 py-3 text-black dark:text-white">{{ vs.spo2 ?? '—' }}</td>
+                    <td class="px-4 py-3 text-black dark:text-white">{{ vs.weight ?? '—' }}</td>
+                    <td class="px-4 py-3">
+                      <a [routerLink]="['/vital-signs', vs.id]" class="text-primary hover:underline">View</a>
+                    </td>
+                  </tr>
+                }
+                @if (latestVitals.length === 0) {
+                  <tr><td colspan="7" class="px-4 py-8 text-center text-gray-500">No vital signs yet</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Optional: Vital signs trend by patient -->
+    <div class="col-span-12">
+      <div class="rounded-lg border border-stroke bg-white p-6 shadow-default dark:border-strokedark dark:bg-boxdark">
+        <h3 class="mb-4 text-lg font-semibold text-black dark:text-white">Vital Signs Trend (by Patient)</h3>
+        <div class="mb-4 flex flex-wrap items-end gap-3">
+          <div>
+            <label class="mb-1 block text-sm font-medium text-black dark:text-white">Patient ID</label>
+            <input type="number" min="1" [(ngModel)]="trendPatientId" placeholder="e.g. 1"
+              class="w-32 rounded border border-stroke bg-transparent px-3 py-2 text-black outline-none focus:border-primary dark:border-strokedark dark:bg-meta-4 dark:text-white" />
+          </div>
+          <button (click)="loadTrend()" [disabled]="trendLoading || !trendPatientId"
+            class="rounded bg-primary px-4 py-2 text-white hover:bg-opacity-90 disabled:opacity-50">
+            {{ trendLoading ? 'Loading…' : 'Load trend' }}
+          </button>
+        </div>
+        @if (trendVitals.length > 0) {
+          <div class="min-h-[220px]">
+            <apx-chart [series]="trendSeries" [chart]="trendChart" [xaxis]="trendXAxis" [yaxis]="trendYAxis"
+              [stroke]="trendStroke" [tooltip]="trendTooltip" [grid]="trendGrid"></apx-chart>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>

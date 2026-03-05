@@ -1,0 +1,175 @@
+
+<div class="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10">
+  
+  <!-- Page Header -->
+  <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <h2 class="text-title-md2 font-bold text-black dark:text-white">
+      {{ isEditMode ? 'Edit Medical Note' : 'Create Medical Note' }}
+    </h2>
+    
+    <nav>
+      <ol class="flex items-center gap-2">
+        <li><a class="font-medium" routerLink="/">Dashboard /</a></li>
+        <li><a class="font-medium" routerLink="/medical-notes">Medical Notes /</a></li>
+        <li class="font-medium text-primary">{{ isEditMode ? 'Edit' : 'Create' }}</li>
+      </ol>
+    </nav>
+  </div>
+
+  <!-- Error Alert -->
+  <div *ngIf="error" class="mb-4 flex w-full border-l-6 border-red-500 bg-red-100 dark:bg-red-900/30 px-7 py-4 shadow-md">
+    <div class="mr-5 flex h-9 w-9 items-center justify-center rounded-lg bg-red-500">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+        <path d="M6.4917 7.65579L11.106 12.2645C11.2545 12.4128 11.4715 12.5 11.6738 12.5C11.8762 12.5 12.0931 12.4128 12.2416 12.2645C12.5621 11.9445 12.5623 11.4317 12.2423 11.1114L7.64539 6.50351L12.2589 1.91221C12.5802 1.59132 12.5802 1.07805 12.2595 0.757793C11.9393 0.437994 11.4268 0.437869 11.1064 0.757418L6.49234 5.34931L1.89459 0.740581C1.57364 0.420019 1.0608 0.420019 0.740487 0.739944C0.42005 1.05999 0.419837 1.57279 0.73985 1.89309L6.4917 7.65579Z" fill="white" stroke="white"/>
+      </svg>
+    </div>
+    <div class="w-full">
+      <h5 class="mb-1 text-lg font-bold text-red-800 dark:text-red-400">Error</h5>
+      <p class="text-base text-red-700 dark:text-red-300">{{ error }}</p>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="flex h-96 items-center justify-center">
+    <div class="h-16 w-16 animate-spin rounded-full border-4 border-solid border-primary border-t-transparent"></div>
+  </div>
+
+  <!-- Form -->
+  <form *ngIf="!loading" [formGroup]="noteForm" (ngSubmit)="onSubmit()" class="space-y-6">
+    
+    <!-- Note Information Card -->
+    <div class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+      <div class="border-b border-stroke px-6 py-4 dark:border-strokedark">
+        <h3 class="font-medium text-black dark:text-white">Note Information</h3>
+      </div>
+      
+      <div class="p-6">
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          
+          <!-- Author ID -->
+          <div>
+            <label class="mb-2.5 block text-black dark:text-white">
+              Author ID <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="number"
+              formControlName="authorId"
+              placeholder="Enter author (user) ID"
+              [class.border-red-500]="isFieldInvalid('authorId')"
+              class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary dark:border-form-strokedark dark:bg-form-input dark:text-white"
+            />
+            <p *ngIf="isFieldInvalid('authorId')" class="mt-1 text-xs text-red-500">
+              {{ getFieldError('authorId') }}
+            </p>
+          </div>
+
+          <!-- Vital Sign ID (Optional) -->
+          <div>
+            <label class="mb-2.5 block text-black dark:text-white">
+              Link to Vital Sign (Optional)
+            </label>
+            <input
+              type="number"
+              formControlName="vitalSignId"
+              placeholder="Enter vital sign ID (optional)"
+              [class.border-red-500]="isFieldInvalid('vitalSignId')"
+              class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary dark:border-form-strokedark dark:bg-form-input dark:text-white"
+            />
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Link this note to a specific vital sign measurement
+            </p>
+            <p *ngIf="isFieldInvalid('vitalSignId')" class="mt-1 text-xs text-red-500">
+              {{ getFieldError('vitalSignId') }}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Note Content Card -->
+    <div class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+      <div class="border-b border-stroke px-6 py-4 dark:border-strokedark">
+        <div class="flex items-center justify-between">
+          <h3 class="font-medium text-black dark:text-white">Note Content</h3>
+          <span class="text-sm text-gray-500 dark:text-gray-400">
+            {{ contentLength }} / 5000 characters
+          </span>
+        </div>
+      </div>
+      
+      <div class="p-6">
+        <div>
+          <label class="mb-2.5 block text-black dark:text-white">
+            Medical Note <span class="text-red-500">*</span>
+          </label>
+          <textarea
+            formControlName="content"
+            rows="12"
+            placeholder="Enter clinical observations, patient notes, treatment plans, or any relevant medical documentation..."
+            [class.border-red-500]="isFieldInvalid('content')"
+            class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary dark:border-form-strokedark dark:bg-form-input dark:text-white"
+          ></textarea>
+          
+          <!-- Character Counter -->
+          <div class="mt-2 flex items-center justify-between">
+            <p *ngIf="isFieldInvalid('content')" class="text-xs text-red-500">
+              {{ getFieldError('content') }}
+            </p>
+            <p class="text-xs" 
+               [class.text-gray-500]="remainingChars > 500"
+               [class.text-yellow-600]="remainingChars <= 500 && remainingChars > 100"
+               [class.text-red-600]="remainingChars <= 100">
+              {{ remainingChars }} characters remaining
+            </p>
+          </div>
+
+          <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+            Minimum 10 characters, Maximum 5000 characters
+          </p>
+        </div>
+
+        <!-- Helper Text -->
+        <div class="mt-6 rounded-lg bg-blue-50 p-4 dark:bg-blue-900/20">
+          <div class="flex items-start gap-3">
+            <svg class="h-5 w-5 flex-shrink-0 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <div class="flex-1">
+              <p class="text-sm font-medium text-blue-800 dark:text-blue-300">Documentation Tips</p>
+              <ul class="mt-2 space-y-1 text-xs text-blue-700 dark:text-blue-400">
+                <li>• Include relevant clinical observations and findings</li>
+                <li>• Document patient symptoms and vital signs trends</li>
+                <li>• Note any interventions or treatment changes</li>
+                <li>• Record patient responses to treatment</li>
+                <li>• Include follow-up plans or recommendations</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="flex justify-end gap-4">
+      <button
+        type="button"
+        (click)="onCancel()"
+        [disabled]="submitting"
+        class="inline-flex items-center justify-center rounded-md border border-stroke px-10 py-3 text-center font-medium text-black hover:bg-opacity-90 disabled:opacity-50 dark:border-strokedark dark:text-white"
+      >
+        Cancel
+      </button>
+      
+      <button
+        type="submit"
+        [disabled]="submitting || noteForm.invalid"
+        class="inline-flex items-center justify-center gap-2.5 rounded-md bg-primary px-10 py-3 text-center font-medium text-white hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <span *ngIf="submitting" class="h-4 w-4 animate-spin rounded-full border-2 border-solid border-white border-t-transparent"></span>
+        {{ submitting ? 'Saving...' : (isEditMode ? 'Update Note' : 'Create Note') }}
+      </button>
+    </div>
+
+  </form>
+
+</div>

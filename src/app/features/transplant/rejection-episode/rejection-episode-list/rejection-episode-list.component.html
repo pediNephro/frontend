@@ -1,0 +1,110 @@
+<!-- rejection-episode-list.component.html -->
+<div class="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10">
+
+  <!-- Page Header -->
+  <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <h2 class="text-title-md2 font-bold text-black dark:text-white">Rejection Episodes</h2>
+    <nav>
+      <ol class="flex items-center gap-2">
+        <li><a class="font-medium" routerLink="/">Dashboard /</a></li>
+        <li><a class="font-medium" routerLink="/kidney-transplants">Kidney Transplants /</a></li>
+        <li class="font-medium text-primary">Rejection Episodes</li>
+      </ol>
+    </nav>
+  </div>
+
+  <div class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+
+    <div class="border-b border-stroke px-6 py-4 dark:border-strokedark flex items-center justify-between">
+      <h3 class="font-medium text-black dark:text-white">
+        Rejection Episodes
+        <span *ngIf="transplantId" class="ml-2 text-sm font-normal text-gray-500">— Transplant #{{ transplantId }}</span>
+      </h3>
+      <a
+        [routerLink]="['/kidney-transplants', transplantId, 'rejection-episodes', 'new']"
+        class="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90"
+      >
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M8 3v10M3 8h10" stroke="white" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        Add Episode
+      </a>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="isLoading" class="flex items-center justify-center py-16">
+      <span class="h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-t-transparent"></span>
+    </div>
+
+    <!-- Error -->
+    <div *ngIf="error && !isLoading" class="px-6 py-8 text-center text-red-500">{{ error }}</div>
+
+    <!-- Empty -->
+    <div *ngIf="!isLoading && !error && episodes.length === 0"
+      class="flex flex-col items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+      <svg class="mb-3 h-12 w-12 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+      </svg>
+      <p class="text-sm">No rejection episodes recorded for this transplant</p>
+      <a
+        [routerLink]="['/kidney-transplants', transplantId, 'rejection-episodes', 'new']"
+        class="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+      >+ Record first episode</a>
+    </div>
+
+    <!-- Table -->
+    <div *ngIf="!isLoading && !error && episodes.length > 0" class="overflow-x-auto">
+      <table class="w-full table-auto">
+        <thead>
+          <tr class="bg-gray-2 text-left dark:bg-meta-4">
+            <th class="px-6 py-4 text-sm font-medium text-black dark:text-white">Date</th>
+            <th class="px-6 py-4 text-sm font-medium text-black dark:text-white">Type</th>
+            <th class="px-6 py-4 text-sm font-medium text-black dark:text-white">Severity</th>
+            <th class="px-6 py-4 text-sm font-medium text-black dark:text-white">Creatinine ↑</th>
+            <th class="px-6 py-4 text-sm font-medium text-black dark:text-white">GFR</th>
+            <th class="px-6 py-4 text-sm font-medium text-black dark:text-white">Status</th>
+            <th class="px-6 py-4 text-sm font-medium text-black dark:text-white">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            *ngFor="let ep of episodes"
+            class="border-t border-stroke dark:border-strokedark hover:bg-gray-1 dark:hover:bg-meta-4 transition-colors"
+          >
+            <td class="px-6 py-4 text-sm text-black dark:text-white">{{ ep.startDate | date:'dd MMM yyyy' }}</td>
+            <td class="px-6 py-4 text-sm text-black dark:text-white">{{ ep.rejectionType }}</td>
+            <td class="px-6 py-4">
+              <span class="inline-flex rounded-full px-3 py-1 text-xs font-medium" [ngClass]="getSeverityClass(ep.severity)">
+                {{ ep.severity }}
+              </span>
+            </td>
+            <td class="px-6 py-4 text-sm text-black dark:text-white">{{ ep.creatinineIncrease }}%</td>
+            <td class="px-6 py-4 text-sm text-black dark:text-white">{{ ep.gfrAtRejection }} mL/min</td>
+            <td class="px-6 py-4">
+              <span class="inline-flex rounded-full px-3 py-1 text-xs font-medium" [ngClass]="getStatusClass(ep.status)">
+                {{ ep.status }}
+              </span>
+            </td>
+            <td class="px-6 py-4">
+              <a
+                [routerLink]="['/kidney-transplants', transplantId, 'rejection-episodes', ep.id]"
+                class="text-primary hover:underline text-sm font-medium"
+              >View</a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Back -->
+  <div class="mt-4">
+    <a
+      [routerLink]="['/kidney-transplants', transplantId]"
+      class="inline-flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-primary"
+    >
+      ← Back to Transplant
+    </a>
+  </div>
+</div>

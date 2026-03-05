@@ -1,0 +1,49 @@
+<div class="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10">
+  <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <h2 class="text-title-md2 font-bold text-black dark:text-white">Vital Signs Trends</h2>
+    <nav>
+      <ol class="flex items-center gap-2">
+        <li><a class="font-medium" routerLink="/vital-signs">Vital Signs /</a></li>
+        <li class="font-medium text-primary">Trends</li>
+      </ol>
+    </nav>
+  </div>
+
+  <div class="mb-6 rounded-lg border border-stroke bg-white p-6 shadow-default dark:border-strokedark dark:bg-boxdark">
+    <h3 class="mb-4 text-lg font-semibold text-black dark:text-white">Select patient</h3>
+    <div class="flex flex-wrap items-end gap-4">
+      <div>
+        <label class="mb-1 block text-sm font-medium text-black dark:text-white">Patient ID</label>
+        <input type="number" min="1" [(ngModel)]="patientId" placeholder="e.g. 1"
+          class="w-32 rounded border border-stroke bg-transparent px-3 py-2 text-black outline-none focus:border-primary dark:border-strokedark dark:bg-meta-4 dark:text-white" />
+      </div>
+      <button (click)="loadTrend()" [disabled]="loading"
+        class="rounded bg-primary px-4 py-2 text-white hover:bg-opacity-90 disabled:opacity-50">
+        {{ loading ? 'Loading…' : 'Load trends' }}
+      </button>
+    </div>
+    @if (error) {
+      <p class="mt-3 text-sm text-red-600 dark:text-red-400">{{ error }}</p>
+    }
+  </div>
+
+  @if (vitals.length > 0) {
+    <div class="rounded-lg border border-stroke bg-white p-6 shadow-default dark:border-strokedark dark:bg-boxdark">
+      <p class="mb-4 text-sm text-gray-600 dark:text-gray-400">Patient {{ patientId }} — {{ vitals.length }} measurements</p>
+      <div class="mb-4 flex flex-wrap gap-2">
+        <button (click)="setMetric('bp')" [class.ring-2]="activeMetric === 'bp'" [class.ring-primary]="activeMetric === 'bp'"
+          class="rounded border border-stroke px-3 py-1.5 text-sm hover:bg-gray-2 dark:border-strokedark dark:hover:bg-meta-4">Blood pressure</button>
+        <button (click)="setMetric('hr')" [class.ring-2]="activeMetric === 'hr'" [class.ring-primary]="activeMetric === 'hr'"
+          class="rounded border border-stroke px-3 py-1.5 text-sm hover:bg-gray-2 dark:border-strokedark dark:hover:bg-meta-4">Heart rate</button>
+        <button (click)="setMetric('spo2')" [class.ring-2]="activeMetric === 'spo2'" [class.ring-primary]="activeMetric === 'spo2'"
+          class="rounded border border-stroke px-3 py-1.5 text-sm hover:bg-gray-2 dark:border-strokedark dark:hover:bg-meta-4">SpO2</button>
+        <button (click)="setMetric('weight')" [class.ring-2]="activeMetric === 'weight'" [class.ring-primary]="activeMetric === 'weight'"
+          class="rounded border border-stroke px-3 py-1.5 text-sm hover:bg-gray-2 dark:border-strokedark dark:hover:bg-meta-4">Weight</button>
+        <button (click)="setMetric('gfr')" [class.ring-2]="activeMetric === 'gfr'" [class.ring-primary]="activeMetric === 'gfr'"
+          class="rounded border border-stroke px-3 py-1.5 text-sm hover:bg-gray-2 dark:border-strokedark dark:hover:bg-meta-4">GFR</button>
+      </div>
+      <apx-chart [series]="chartSeries" [chart]="chart" [xaxis]="xaxis" [yaxis]="yaxis"
+        [stroke]="stroke" [tooltip]="tooltip" [grid]="grid"></apx-chart>
+    </div>
+  }
+</div>

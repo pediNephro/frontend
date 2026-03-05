@@ -1,0 +1,206 @@
+<!-- File: biopsy-form.component.html -->
+<div class="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10">
+
+  <!-- Page Header -->
+  <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <h2 class="text-title-md2 font-bold text-black dark:text-white">
+      Record Renal Biopsy
+    </h2>
+    <nav>
+      <ol class="flex items-center gap-2">
+        <li><a class="font-medium" routerLink="/">Dashboard /</a></li>
+        <li><a class="font-medium" routerLink="/kidney-transplants">Kidney Transplants /</a></li>
+        <li class="font-medium text-primary">Biopsy</li>
+      </ol>
+    </nav>
+  </div>
+
+  <!-- Success Alert -->
+  <div *ngIf="successMessage" class="mb-4 flex w-full border-l-6 border-green-500 bg-green-100 dark:bg-green-900/30 px-7 py-4 shadow-md">
+    <div class="mr-5 flex h-9 w-9 items-center justify-center rounded-lg bg-green-500">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M3 8L6.5 11.5L13 5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div>
+      <h5 class="mb-1 text-lg font-bold text-green-800 dark:text-green-400">Success</h5>
+      <p class="text-base text-green-700 dark:text-green-300">{{ successMessage }}</p>
+    </div>
+  </div>
+
+  <!-- Error Alert -->
+  <div *ngIf="error" class="mb-4 flex w-full border-l-6 border-red-500 bg-red-100 dark:bg-red-900/30 px-7 py-4 shadow-md">
+    <div class="mr-5 flex h-9 w-9 items-center justify-center rounded-lg bg-red-500">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+        <path d="M6.4917 7.65579L11.106 12.2645C11.2545 12.4128 11.4715 12.5 11.6738 12.5C11.8762 12.5 12.0931 12.4128 12.2416 12.2645C12.5621 11.9445 12.5623 11.4317 12.2423 11.1114L7.64539 6.50351L12.2589 1.91221C12.5802 1.59132 12.5802 1.07805 12.2595 0.757793C11.9393 0.437994 11.4268 0.437869 11.1064 0.757418L6.49234 5.34931L1.89459 0.740581C1.57364 0.420019 1.0608 0.420019 0.740487 0.739944C0.42005 1.05999 0.419837 1.57279 0.73985 1.89309L6.4917 7.65579Z" fill="white" stroke="white"/>
+      </svg>
+    </div>
+    <div>
+      <h5 class="mb-1 text-lg font-bold text-red-800 dark:text-red-400">Error</h5>
+      <p class="text-base text-red-700 dark:text-red-300">{{ error }}</p>
+    </div>
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6">
+
+    <!-- Basic Info Card -->
+    <div class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+      <div class="border-b border-stroke px-6 py-4 dark:border-strokedark">
+        <h3 class="font-medium text-black dark:text-white">Biopsy Information</h3>
+      </div>
+      <div class="p-6">
+        <div class="mb-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
+
+          <!-- Biopsy Date -->
+          <div>
+            <label class="mb-2.5 block text-black dark:text-white">
+              Biopsy Date <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="date"
+              formControlName="biopsyDate"
+              [class.border-red-500]="isFieldInvalid('biopsyDate')"
+              class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary dark:border-form-strokedark dark:bg-form-input dark:text-white"
+            />
+            <p *ngIf="isFieldInvalid('biopsyDate')" class="mt-1 text-xs text-red-500">{{ getFieldError('biopsyDate') }}</p>
+          </div>
+
+          <!-- Indication -->
+          <div>
+            <label class="mb-2.5 block text-black dark:text-white">
+              Indication <span class="text-red-500">*</span>
+            </label>
+            <select
+              formControlName="indication"
+              [class.border-red-500]="isFieldInvalid('indication')"
+              class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary dark:border-form-strokedark dark:bg-form-input dark:text-white"
+            >
+              <option value="">Select indication</option>
+              <option *ngFor="let i of indications" [value]="i">{{ i.replace(/_/g, ' ') }}</option>
+            </select>
+            <p *ngIf="isFieldInvalid('indication')" class="mt-1 text-xs text-red-500">{{ getFieldError('indication') }}</p>
+          </div>
+        </div>
+
+        <!-- Report Upload -->
+        <div>
+          <label class="mb-2.5 block text-black dark:text-white">Biopsy Report (PDF)</label>
+          <input
+            type="file"
+            accept=".pdf"
+            (change)="onFileSelected($event)"
+            class="w-full cursor-pointer rounded border-[1.5px] border-stroke bg-transparent outline-none transition file:mr-5 file:border-collapse file:cursor-pointer file:border-0 file:border-r file:border-solid file:border-stroke file:bg-whiter file:px-5 file:py-3 file:hover:bg-primary file:hover:bg-opacity-10 focus:border-primary dark:border-form-strokedark dark:bg-form-input dark:file:border-form-strokedark dark:file:bg-white/30 dark:file:text-white"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- Banff Scores Card -->
+    <div class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+      <div class="border-b border-stroke px-6 py-4 dark:border-strokedark">
+        <div class="flex items-center gap-3">
+          <h3 class="font-medium text-black dark:text-white">Banff Scoring</h3>
+          <span class="rounded bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">0 – 3 scale</span>
+        </div>
+      </div>
+      <div class="p-6">
+        <div class="mb-6 grid grid-cols-1 gap-6 sm:grid-cols-3">
+
+          <!-- Banff T -->
+          <div>
+            <label class="mb-2.5 block text-black dark:text-white">
+              Tubulitis (t) <span class="text-red-500">*</span>
+            </label>
+            <select
+              formControlName="banffScoreT"
+              [class.border-red-500]="isFieldInvalid('banffScoreT')"
+              class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary dark:border-form-strokedark dark:bg-form-input dark:text-white"
+            >
+              <option value="">Select score</option>
+              <option *ngFor="let s of scoreRange" [value]="s">{{ s }}</option>
+            </select>
+            <p *ngIf="isFieldInvalid('banffScoreT')" class="mt-1 text-xs text-red-500">{{ getFieldError('banffScoreT') }}</p>
+          </div>
+
+          <!-- Banff I -->
+          <div>
+            <label class="mb-2.5 block text-black dark:text-white">
+              Inflammation (i) <span class="text-red-500">*</span>
+            </label>
+            <select
+              formControlName="banffScoreI"
+              [class.border-red-500]="isFieldInvalid('banffScoreI')"
+              class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary dark:border-form-strokedark dark:bg-form-input dark:text-white"
+            >
+              <option value="">Select score</option>
+              <option *ngFor="let s of scoreRange" [value]="s">{{ s }}</option>
+            </select>
+            <p *ngIf="isFieldInvalid('banffScoreI')" class="mt-1 text-xs text-red-500">{{ getFieldError('banffScoreI') }}</p>
+          </div>
+
+          <!-- Banff G -->
+          <div>
+            <label class="mb-2.5 block text-black dark:text-white">
+              Glomerulitis (g) <span class="text-red-500">*</span>
+            </label>
+            <select
+              formControlName="banffScoreG"
+              [class.border-red-500]="isFieldInvalid('banffScoreG')"
+              class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary dark:border-form-strokedark dark:bg-form-input dark:text-white"
+            >
+              <option value="">Select score</option>
+              <option *ngFor="let s of scoreRange" [value]="s">{{ s }}</option>
+            </select>
+            <p *ngIf="isFieldInvalid('banffScoreG')" class="mt-1 text-xs text-red-500">{{ getFieldError('banffScoreG') }}</p>
+          </div>
+        </div>
+
+        <!-- Banff Category -->
+        <div class="mb-6 max-w-xs">
+          <label class="mb-2.5 block text-black dark:text-white">
+            Banff Category <span class="text-red-500">*</span>
+          </label>
+          <select
+            formControlName="banffCategory"
+            [class.border-red-500]="isFieldInvalid('banffCategory')"
+            class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary dark:border-form-strokedark dark:bg-form-input dark:text-white"
+          >
+            <option value="">Select category</option>
+            <option *ngFor="let c of banffCategories" [value]="c">{{ c }}</option>
+          </select>
+          <p *ngIf="isFieldInvalid('banffCategory')" class="mt-1 text-xs text-red-500">{{ getFieldError('banffCategory') }}</p>
+        </div>
+
+        <!-- Conclusion -->
+        <div>
+          <label class="mb-2.5 block text-black dark:text-white">
+            Conclusion <span class="text-red-500">*</span>
+          </label>
+          <textarea
+            formControlName="conclusion"
+            rows="3"
+            placeholder="Final pathological conclusion..."
+            [class.border-red-500]="isFieldInvalid('conclusion')"
+            class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary dark:border-form-strokedark dark:bg-form-input dark:text-white"
+          ></textarea>
+          <p *ngIf="isFieldInvalid('conclusion')" class="mt-1 text-xs text-red-500">{{ getFieldError('conclusion') }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="flex justify-end">
+      <button
+        type="submit"
+        [disabled]="isLoading"
+        class="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-10 py-3 text-center font-medium text-white hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <span *ngIf="!isLoading">Save Biopsy Record</span>
+        <span *ngIf="isLoading" class="flex items-center gap-2">
+          <span class="h-4 w-4 animate-spin rounded-full border-2 border-solid border-white border-t-transparent"></span>
+          Saving...
+        </span>
+      </button>
+    </div>
+  </form>
+</div>

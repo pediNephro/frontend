@@ -1,0 +1,282 @@
+<!-- kidney-transplant-detail.component.html -->
+<div class="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10">
+
+  <!-- Page Header -->
+  <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <h2 class="text-title-md2 font-bold text-black dark:text-white">
+      Transplant Record
+      <span *ngIf="transplant" class="ml-2 text-lg font-normal text-gray-500">#{{ transplant.id }}</span>
+    </h2>
+    <nav>
+      <ol class="flex items-center gap-2">
+        <li><a class="font-medium" routerLink="/">Dashboard /</a></li>
+        <li><a class="font-medium" routerLink="/kidney-transplants">Kidney Transplants /</a></li>
+        <li class="font-medium text-primary">Detail</li>
+      </ol>
+    </nav>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="flex items-center justify-center py-24">
+    <span class="h-10 w-10 animate-spin rounded-full border-4 border-solid border-primary border-t-transparent"></span>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error && !isLoading" class="flex w-full border-l-6 border-red-500 bg-red-100 dark:bg-red-900/30 px-7 py-4 shadow-md">
+    <p class="text-red-700 dark:text-red-300">{{ error }}</p>
+  </div>
+
+  <ng-container *ngIf="transplant && !isLoading">
+
+    <!-- Status Banner -->
+    <div class="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-sm border border-stroke bg-white px-6 py-4 shadow-default dark:border-strokedark dark:bg-boxdark">
+      <div class="flex flex-wrap items-center gap-3">
+        <span class="inline-flex rounded-full px-4 py-1.5 text-sm font-semibold" [ngClass]="getGraftStatusClass(transplant.graftStatus)">
+          {{ transplant.graftStatus }}
+        </span>
+        <span class="inline-flex rounded-full px-3 py-1.5 text-sm font-medium" [ngClass]="getDonorTypeClass(transplant.donorType)">
+          {{ transplant.donorType }} DONOR
+        </span>
+        <span class="text-sm text-gray-500">Transplanted {{ transplant.transplantDate | date:'dd MMMM yyyy' }}</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <a
+          [routerLink]="['/kidney-transplants', transplant.id, 'edit']"
+          class="inline-flex items-center gap-2 rounded-md border border-stroke px-4 py-2 text-sm font-medium text-black hover:bg-gray-2 dark:border-strokedark dark:text-white dark:hover:bg-meta-4"
+        >
+          <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+          </svg>
+          Edit
+        </a>
+        <a
+          routerLink="/kidney-transplants"
+          class="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-black hover:bg-opacity-90"
+        >
+          ← Back to List
+        </a>
+      </div>
+    </div>
+
+    <!-- Info Cards Row -->
+    <div class="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div class="rounded-sm border border-stroke bg-white p-4 shadow-default dark:border-strokedark dark:bg-boxdark">
+        <p class="text-xs text-gray-500 dark:text-gray-400">Blood Group</p>
+        <p class="mt-1 text-xl font-bold text-black dark:text-white">{{ transplant.donorBloodGroup }}</p>
+      </div>
+      <div class="rounded-sm border border-stroke bg-white p-4 shadow-default dark:border-strokedark dark:bg-boxdark">
+        <p class="text-xs text-gray-500 dark:text-gray-400">Cold Ischemia</p>
+        <p class="mt-1 text-xl font-bold text-black dark:text-white">{{ transplant.coldIschemiaTime }} <span class="text-sm font-normal">min</span></p>
+      </div>
+      <div class="rounded-sm border border-stroke bg-white p-4 shadow-default dark:border-strokedark dark:bg-boxdark">
+        <p class="text-xs text-gray-500 dark:text-gray-400">Patient ID</p>
+        <p class="mt-1 text-xl font-bold text-black dark:text-white">#{{ transplant.patientId }}</p>
+      </div>
+      <div class="rounded-sm border border-stroke bg-white p-4 shadow-default dark:border-strokedark dark:bg-boxdark">
+        <p class="text-xs text-gray-500 dark:text-gray-400">Record Created</p>
+        <p class="mt-1 text-sm font-medium text-black dark:text-white">{{ transplant.createdAt | date:'dd MMM yyyy' }}</p>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+
+      <!-- Tab Header -->
+      <div class="border-b border-stroke dark:border-strokedark">
+        <div class="flex overflow-x-auto">
+          <button
+            *ngFor="let tab of tabs"
+            (click)="setTab(tab.key)"
+            class="flex items-center gap-2 border-b-2 px-5 py-4 text-sm font-medium transition-colors whitespace-nowrap"
+            [class.border-primary]="activeTab === tab.key"
+            [class.text-primary]="activeTab === tab.key"
+            [class.border-transparent]="activeTab !== tab.key"
+            [class.text-gray-500]="activeTab !== tab.key"
+            [class.hover:text-black]="activeTab !== tab.key"
+          >
+            <span>{{ tab.icon }}</span>
+            {{ tab.label }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Tab Content -->
+      <div class="p-6">
+
+        <!-- OVERVIEW TAB -->
+        <div *ngIf="activeTab === 'overview'">
+          <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+
+            <!-- Transplant Details -->
+            <div>
+              <h4 class="mb-4 text-base font-semibold text-black dark:text-white">Transplant Details</h4>
+              <dl class="space-y-3">
+                <div class="flex justify-between border-b border-stroke pb-3 dark:border-strokedark">
+                  <dt class="text-sm text-gray-500 dark:text-gray-400">Transplant Date</dt>
+                  <dd class="text-sm font-medium text-black dark:text-white">{{ transplant.transplantDate | date:'dd MMM yyyy' }}</dd>
+                </div>
+                <div class="flex justify-between border-b border-stroke pb-3 dark:border-strokedark">
+                  <dt class="text-sm text-gray-500 dark:text-gray-400">Donor Type</dt>
+                  <dd>
+                    <span class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium" [ngClass]="getDonorTypeClass(transplant.donorType)">
+                      {{ transplant.donorType }}
+                    </span>
+                  </dd>
+                </div>
+                <div class="flex justify-between border-b border-stroke pb-3 dark:border-strokedark">
+                  <dt class="text-sm text-gray-500 dark:text-gray-400">Donor Blood Group</dt>
+                  <dd class="text-sm font-bold text-black dark:text-white">{{ transplant.donorBloodGroup }}</dd>
+                </div>
+                <div class="flex justify-between border-b border-stroke pb-3 dark:border-strokedark">
+                  <dt class="text-sm text-gray-500 dark:text-gray-400">Cold Ischemia Time</dt>
+                  <dd class="text-sm font-medium text-black dark:text-white">{{ transplant.coldIschemiaTime }} minutes</dd>
+                </div>
+                <div class="flex justify-between">
+                  <dt class="text-sm text-gray-500 dark:text-gray-400">Graft Status</dt>
+                  <dd>
+                    <span class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium" [ngClass]="getGraftStatusClass(transplant.graftStatus)">
+                      {{ transplant.graftStatus }}
+                    </span>
+                  </dd>
+                </div>
+              </dl>
+            </div>
+
+            <!-- Quick Actions -->
+            <div>
+              <h4 class="mb-4 text-base font-semibold text-black dark:text-white">Quick Actions</h4>
+              <div class="grid grid-cols-2 gap-3">
+                <a
+                  [routerLink]="['/kidney-transplants', transplant.id, 'rejection-episodes']"
+                  class="flex flex-col items-center gap-2 rounded-sm border border-stroke p-4 text-center transition hover:border-primary hover:bg-primary/5 dark:border-strokedark"
+                >
+                  <span class="text-2xl">🚨</span>
+                  <span class="text-xs font-medium text-black dark:text-white">Rejections</span>
+                </a>
+                <a
+                  [routerLink]="['/kidney-transplants', transplant.id, 'biopsies']"
+                  class="flex flex-col items-center gap-2 rounded-sm border border-stroke p-4 text-center transition hover:border-primary hover:bg-primary/5 dark:border-strokedark"
+                >
+                  <span class="text-2xl">🔬</span>
+                  <span class="text-xs font-medium text-black dark:text-white">Biopsies</span>
+                </a>
+                <a
+                  [routerLink]="['/kidney-transplants', transplant.id, 'immunosuppressants']"
+                  class="flex flex-col items-center gap-2 rounded-sm border border-stroke p-4 text-center transition hover:border-primary hover:bg-primary/5 dark:border-strokedark"
+                >
+                  <span class="text-2xl">💊</span>
+                  <span class="text-xs font-medium text-black dark:text-white">Drug Monitoring</span>
+                </a>
+                <a
+                  [routerLink]="['/kidney-transplants', transplant.id, 'complications']"
+                  class="flex flex-col items-center gap-2 rounded-sm border border-stroke p-4 text-center transition hover:border-primary hover:bg-primary/5 dark:border-strokedark"
+                >
+                  <span class="text-2xl">⚠️</span>
+                  <span class="text-xs font-medium text-black dark:text-white">Complications</span>
+                </a>
+                <a
+                  [routerLink]="['/kidney-transplants', transplant.id, 'protocol']"
+                  class="col-span-2 flex flex-col items-center gap-2 rounded-sm border border-stroke p-4 text-center transition hover:border-primary hover:bg-primary/5 dark:border-strokedark"
+                >
+                  <span class="text-2xl">📅</span>
+                  <span class="text-xs font-medium text-black dark:text-white">Surveillance Protocol</span>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Surgical Report -->
+          <div *ngIf="transplant.surgicalReportPath" class="mt-6 flex items-center justify-between rounded-sm border border-stroke p-4 dark:border-strokedark">
+            <div class="flex items-center gap-3">
+              <div class="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
+                <svg class="h-5 w-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                </svg>
+              </div>
+              <div>
+                <p class="text-sm font-medium text-black dark:text-white">Surgical Report</p>
+                <p class="text-xs text-gray-500">{{ transplant.surgicalReportPath }}</p>
+              </div>
+            </div>
+            <a [href]="transplant.surgicalReportPath" target="_blank"
+              class="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-black hover:bg-opacity-90">
+              Download ↗
+            </a>
+          </div>
+        </div>
+
+        <!-- REJECTIONS TAB -->
+        <div *ngIf="activeTab === 'rejections'">
+          <div class="flex items-center justify-between mb-4">
+            <h4 class="text-base font-semibold text-black dark:text-white">Rejection Episodes</h4>
+            <a
+              [routerLink]="['/kidney-transplants', transplant.id, 'rejection-episodes', 'new']"
+              class="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-black hover:bg-opacity-90"
+            >+ Add Episode</a>
+          </div>
+          <a
+            [routerLink]="['/kidney-transplants', transplant.id, 'rejection-episodes']"
+            class="inline-flex items-center gap-1 text-sm text-blue-500 hover:underline"
+          >View full list →</a>
+        </div>
+
+        <!-- BIOPSIES TAB -->
+        <div *ngIf="activeTab === 'biopsies'">
+          <div class="flex items-center justify-between mb-4">
+            <h4 class="text-base font-semibold text-black dark:text-white">Renal Biopsies</h4>
+            <a
+              [routerLink]="['/kidney-transplants', transplant.id, 'biopsies', 'new']"
+              class="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-black hover:bg-opacity-90"
+            >+ Add Biopsy</a>
+          </div>
+          <a
+            [routerLink]="['/kidney-transplants', transplant.id, 'biopsies']"
+            class="inline-flex items-center gap-1 text-sm text-blue-500 hover:underline"
+          >View full list →</a>
+        </div>
+
+        <!-- DRUGS TAB -->
+        <div *ngIf="activeTab === 'drugs'">
+          <div class="flex items-center justify-between mb-4">
+            <h4 class="text-base font-semibold text-black dark:text-white">Immunosuppressant Drugs</h4>
+            <a
+              [routerLink]="['/kidney-transplants', transplant.id, 'immunosuppressants', 'new']"
+              class="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-black hover:bg-opacity-90"
+            >+ Add Drug</a>
+          </div>
+          <a
+            [routerLink]="['/kidney-transplants', transplant.id, 'immunosuppressants']"
+            class="inline-flex items-center gap-1 text-sm text-blue-500 hover:underline"
+          >View full list →</a>
+        </div>
+
+        <!-- COMPLICATIONS TAB -->
+        <div *ngIf="activeTab === 'complications'">
+          <div class="flex items-center justify-between mb-4">
+            <h4 class="text-base font-semibold text-black dark:text-white">Complications</h4>
+            <a
+              [routerLink]="['/kidney-transplants', transplant.id, 'complications', 'new']"
+              class="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-black hover:bg-opacity-90"
+            >+ Add Complication</a>
+          </div>
+          <a
+            [routerLink]="['/transplant', transplant.id, 'complications']"
+            class="inline-flex items-center gap-1 text-sm text-blue-500 hover:underline"
+          >View full list →</a>
+        </div>
+
+        <!-- PROTOCOL TAB -->
+        <div *ngIf="activeTab === 'protocol'">
+          <div class="flex items-center justify-between mb-4">
+            <h4 class="text-base font-semibold text-black dark:text-white">Surveillance Protocol</h4>
+            <a
+              [routerLink]="['/kidney-transplants', transplant.id, 'protocol']"
+              class="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90"
+            >View Protocol</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </ng-container>
+</div>

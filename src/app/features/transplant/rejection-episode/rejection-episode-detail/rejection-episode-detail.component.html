@@ -1,0 +1,187 @@
+<!-- rejection-episode-detail.component.html -->
+<div class="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10">
+
+  <!-- Page Header -->
+  <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <h2 class="text-title-md2 font-bold text-black dark:text-white">Rejection Episode Detail</h2>
+    <nav>
+      <ol class="flex items-center gap-2">
+        <li><a class="font-medium" routerLink="/">Dashboard /</a></li>
+        <li><a class="font-medium" routerLink="/kidney-transplants">Kidney Transplants /</a></li>
+        <li class="font-medium text-primary">Rejection Episode</li>
+      </ol>
+    </nav>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="flex items-center justify-center py-24">
+    <span class="h-10 w-10 animate-spin rounded-full border-4 border-solid border-primary border-t-transparent"></span>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error && !isLoading" class="flex w-full border-l-6 border-red-500 bg-red-100 dark:bg-red-900/30 px-7 py-4 shadow-md">
+    <p class="text-red-700 dark:text-red-300">{{ error }}</p>
+  </div>
+
+  <ng-container *ngIf="episode && !isLoading">
+
+    <!-- Status Banner -->
+    <div
+      class="mb-6 flex items-center justify-between rounded-sm border px-6 py-4 shadow-default"
+      [class.border-red-300]="episode.status === 'CONFIRMED'"
+      [class.bg-red-50]="episode.status === 'CONFIRMED'"
+      [class.dark:bg-red-900/20]="episode.status === 'CONFIRMED'"
+      [class.border-yellow-300]="episode.status === 'SUSPECTED'"
+      [class.bg-yellow-50]="episode.status === 'SUSPECTED'"
+      [class.border-green-300]="episode.status === 'RESOLVED'"
+      [class.bg-green-50]="episode.status === 'RESOLVED'"
+      [class.dark:bg-green-900/20]="episode.status === 'RESOLVED'"
+    >
+      <div class="flex items-center gap-3">
+        <span class="inline-flex rounded-full px-4 py-1.5 text-sm font-semibold" [ngClass]="getStatusClass(episode.status)">
+          {{ episode.status }}
+        </span>
+        <span class="text-sm text-gray-600 dark:text-gray-300">
+          {{ episode.rejectionType }} Rejection — {{ episode.startDate | date:'dd MMM yyyy' }}
+        </span>
+      </div>
+      <span class="inline-flex rounded-full px-3 py-1 text-xs font-medium" [ngClass]="getSeverityClass(episode.severity)">
+        {{ episode.severity }}
+      </span>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+
+      <!-- Left: Clinical Data (2 cols) -->
+      <div class="lg:col-span-2 space-y-6">
+
+        <!-- Lab Values Card -->
+        <div class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+          <div class="border-b border-stroke px-6 py-4 dark:border-strokedark">
+            <h3 class="font-medium text-black dark:text-white">Laboratory Values</h3>
+          </div>
+          <div class="p-6">
+            <div class="grid grid-cols-2 gap-6">
+
+              <!-- Creatinine -->
+              <div class="rounded-sm border border-stroke p-4 dark:border-strokedark">
+                <p class="mb-1 text-xs text-gray-500 dark:text-gray-400">Creatinine Increase</p>
+                <p class="text-2xl font-bold text-black dark:text-white">{{ episode.creatinineIncrease }}%</p>
+                <div class="mt-2 h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                  <div
+                    class="h-1.5 rounded-full transition-all"
+                    [class.bg-yellow-400]="episode.creatinineIncrease < 50"
+                    [class.bg-orange-500]="episode.creatinineIncrease >= 50 && episode.creatinineIncrease < 100"
+                    [class.bg-red-500]="episode.creatinineIncrease >= 100"
+                    [style.width.%]="episode.creatinineIncrease > 100 ? 100 : episode.creatinineIncrease"
+                  ></div>
+                </div>
+              </div>
+
+              <!-- GFR -->
+              <div class="rounded-sm border border-stroke p-4 dark:border-strokedark">
+                <p class="mb-1 text-xs text-gray-500 dark:text-gray-400">GFR at Rejection</p>
+                <p class="text-2xl font-bold text-black dark:text-white">{{ episode.gfrAtRejection }}
+                  <span class="text-sm font-normal text-gray-500">mL/min</span>
+                </p>
+                <p class="mt-2 text-xs" [class.text-red-500]="episode.gfrAtRejection < 30" [class.text-yellow-500]="episode.gfrAtRejection >= 30 && episode.gfrAtRejection < 60" [class.text-green-500]="episode.gfrAtRejection >= 60">
+                  <ng-container *ngIf="episode.gfrAtRejection < 30">Severely reduced</ng-container>
+                  <ng-container *ngIf="episode.gfrAtRejection >= 30 && episode.gfrAtRejection < 60">Moderately reduced</ng-container>
+                  <ng-container *ngIf="episode.gfrAtRejection >= 60">Mild / Normal range</ng-container>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Treatment Card -->
+        <div class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+          <div class="border-b border-stroke px-6 py-4 dark:border-strokedark">
+            <h3 class="font-medium text-black dark:text-white">Treatment</h3>
+          </div>
+          <div class="p-6">
+            <p class="text-sm leading-relaxed text-black dark:text-white whitespace-pre-line">{{ episode.treatment }}</p>
+          </div>
+        </div>
+
+        <!-- Linked Biopsy -->
+        <div *ngIf="episode.biopsyId" class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+          <div class="border-b border-stroke px-6 py-4 dark:border-strokedark">
+            <h3 class="font-medium text-black dark:text-white">Linked Biopsy</h3>
+          </div>
+          <div class="p-6 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                <svg class="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+              </div>
+              <div>
+                <p class="text-sm font-medium text-black dark:text-white">Biopsy #{{ episode.biopsyId }}</p>
+                <p class="text-xs text-gray-500">Click to view full report</p>
+              </div>
+            </div>
+            <a [routerLink]="['/biopsies', episode.biopsyId]" class="text-sm font-medium text-primary hover:underline">View →</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Summary -->
+      <div class="space-y-6">
+
+        <!-- Info Card -->
+        <div class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+          <div class="border-b border-stroke px-6 py-4 dark:border-strokedark">
+            <h3 class="font-medium text-black dark:text-white">Episode Summary</h3>
+          </div>
+          <div class="p-6 space-y-4">
+            <div>
+              <p class="text-xs text-gray-500 dark:text-gray-400">Episode ID</p>
+              <p class="mt-0.5 text-sm font-medium text-black dark:text-white">#{{ episode.id }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-gray-500 dark:text-gray-400">Start Date</p>
+              <p class="mt-0.5 text-sm font-medium text-black dark:text-white">{{ episode.startDate | date:'dd MMM yyyy' }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-gray-500 dark:text-gray-400">Rejection Type</p>
+              <p class="mt-0.5 text-sm font-medium text-black dark:text-white">{{ episode.rejectionType }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-gray-500 dark:text-gray-400">Severity</p>
+              <span class="mt-0.5 inline-flex rounded-full px-3 py-1 text-xs font-medium" [ngClass]="getSeverityClass(episode.severity)">
+                {{ episode.severity }}
+              </span>
+            </div>
+            <div>
+              <p class="text-xs text-gray-500 dark:text-gray-400">Current Status</p>
+              <span class="mt-0.5 inline-flex rounded-full px-3 py-1 text-xs font-medium" [ngClass]="getStatusClass(episode.status)">
+                {{ episode.status }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark p-6 space-y-3">
+          <a
+            [routerLink]="['../', 'edit', episode.id]"
+            class="flex w-full items-center justify-center gap-2 rounded-md border border-stroke px-4 py-2.5 text-sm font-medium text-black hover:bg-gray-2 dark:border-strokedark dark:text-white dark:hover:bg-meta-4"
+          >
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+            </svg>
+            Edit Episode
+          </a>
+          <button
+            routerLink="../"
+            class="flex w-full items-center justify-center gap-2 rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-white hover:bg-opacity-90"
+          >
+            ← Back to List
+          </button>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</div>

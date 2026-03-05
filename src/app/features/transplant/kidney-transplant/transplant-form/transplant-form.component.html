@@ -1,0 +1,426 @@
+<!-- File: src/app/pages/kidney-transplant/kidney-transplant-form/kidney-transplant-form.component.html -->
+
+<div class="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10">
+  
+  <!-- Page Header -->
+  <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <h2 class="text-title-md2 font-bold text-black dark:text-white">
+      Create Kidney Transplant Record
+    </h2>
+    
+    <nav>
+      <ol class="flex items-center gap-2">
+        <li><a class="font-medium" routerLink="/">Dashboard /</a></li>
+        <li><a class="font-medium" routerLink="/kidney-transplants">Kidney Transplants /</a></li>
+        <li class="font-medium text-primary">Create</li>
+      </ol>
+    </nav>
+  </div>
+
+  <!-- Error Alert -->
+  <div *ngIf="error" class="mb-4 flex w-full border-l-6 border-red-500 bg-red-100 dark:bg-red-900/30 px-7 py-4 shadow-md">
+    <div class="mr-5 flex h-9 w-9 items-center justify-center rounded-lg bg-red-500">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+        <path d="M6.4917 7.65579L11.106 12.2645C11.2545 12.4128 11.4715 12.5 11.6738 12.5C11.8762 12.5 12.0931 12.4128 12.2416 12.2645C12.5621 11.9445 12.5623 11.4317 12.2423 11.1114L7.64539 6.50351L12.2589 1.91221C12.5802 1.59132 12.5802 1.07805 12.2595 0.757793C11.9393 0.437994 11.4268 0.437869 11.1064 0.757418L6.49234 5.34931L1.89459 0.740581C1.57364 0.420019 1.0608 0.420019 0.740487 0.739944C0.42005 1.05999 0.419837 1.57279 0.73985 1.89309L6.4917 7.65579Z" fill="white" stroke="white"/>
+      </svg>
+    </div>
+    <div class="w-full">
+      <h5 class="mb-1 text-lg font-bold text-red-800 dark:text-red-400">Error</h5>
+      <p class="text-base text-red-700 dark:text-red-300">{{ error }}</p>
+    </div>
+  </div>
+
+  <!-- Stepper Card -->
+  <div class="mb-6 rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+    <div class="border-b border-stroke px-6 py-4 dark:border-strokedark">
+      <div class="flex items-center justify-center">
+        <div class="flex w-full max-w-3xl items-center justify-between">
+          
+          <!-- Step 1 -->
+          <div class="flex flex-col items-center">
+            <div class="relative">
+              <div 
+                [class.bg-primary]="currentStep >= 1"
+                [class.bg-gray-300]="currentStep < 1"
+                class="flex h-12 w-12 items-center justify-center rounded-full text-white transition-colors">
+                <svg *ngIf="currentStep > 1" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span *ngIf="currentStep <= 1" class="text-lg font-bold">1</span>
+              </div>
+            </div>
+            <div class="mt-2 text-center">
+              <p [class.text-primary]="currentStep >= 1" [class.text-gray-500]="currentStep < 1" class="text-sm font-medium">
+                Transplant Info
+              </p>
+            </div>
+          </div>
+
+          <!-- Connector Line -->
+          <div class="flex-1 px-4">
+            <div 
+              [class.bg-primary]="currentStep >= 2"
+              [class.bg-gray-300]="currentStep < 2"
+              class="h-1 rounded transition-colors">
+            </div>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="flex flex-col items-center">
+            <div class="relative">
+              <div 
+                [class.bg-primary]="currentStep >= 2"
+                [class.bg-gray-300]="currentStep < 2"
+                class="flex h-12 w-12 items-center justify-center rounded-full text-white transition-colors">
+                <span class="text-lg font-bold">2</span>
+              </div>
+            </div>
+            <div class="mt-2 text-center">
+              <p [class.text-primary]="currentStep >= 2" [class.text-gray-500]="currentStep < 2" class="text-sm font-medium">
+                HLA Compatibility
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 1: Transplant Information -->
+  <div *ngIf="currentStep === 1" class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+    <div class="border-b border-stroke px-6 py-4 dark:border-strokedark">
+      <h3 class="font-medium text-black dark:text-white">Transplant Details</h3>
+    </div>
+
+    <form [formGroup]="transplantForm">
+      <div class="p-6">
+        
+        <!-- Row 1 -->
+        <div class="mb-6 grid grid-cols-1 gap-6 sm:grid-cols-3">
+          
+          <!-- Transplant Date -->
+          <div>
+            <label class="mb-2.5 block text-black dark:text-white">
+              Transplant Date <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="date"
+              formControlName="transplantDate"
+              [class.border-red-500]="isFieldInvalid(transplantForm, 'transplantDate')"
+              class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary dark:border-form-strokedark dark:bg-form-input dark:text-white"
+            />
+            <p *ngIf="isFieldInvalid(transplantForm, 'transplantDate')" class="mt-1 text-xs text-red-500">
+              {{ getFieldError(transplantForm, 'transplantDate') }}
+            </p>
+          </div>
+
+          <!-- Donor Type -->
+          <div>
+            <label class="mb-2.5 block text-black dark:text-white">
+              Donor Type <span class="text-red-500">*</span>
+            </label>
+            <select
+              formControlName="donorType"
+              [class.border-red-500]="isFieldInvalid(transplantForm, 'donorType')"
+              class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary dark:border-form-strokedark dark:bg-form-input dark:text-white"
+            >
+              <option value="">Select donor type</option>
+              <option *ngFor="let type of donorTypes" [value]="type">
+                {{ type.replace(/_/g, ' ') }}
+              </option>
+            </select>
+            <p *ngIf="isFieldInvalid(transplantForm, 'donorType')" class="mt-1 text-xs text-red-500">
+              {{ getFieldError(transplantForm, 'donorType') }}
+            </p>
+          </div>
+
+          <!-- Donor Blood Group -->
+          <div>
+            <label class="mb-2.5 block text-black dark:text-white">
+              Donor Blood Group <span class="text-red-500">*</span>
+            </label>
+            <select
+              formControlName="donorBloodGroup"
+              [class.border-red-500]="isFieldInvalid(transplantForm, 'donorBloodGroup')"
+              class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary dark:border-form-strokedark dark:bg-form-input dark:text-white"
+            >
+              <option value="">Select blood group</option>
+              <option *ngFor="let group of bloodGroups" [value]="group">
+                {{ group }}
+              </option>
+            </select>
+            <p *ngIf="isFieldInvalid(transplantForm, 'donorBloodGroup')" class="mt-1 text-xs text-red-500">
+              {{ getFieldError(transplantForm, 'donorBloodGroup') }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Row 2 -->
+        <div class="mb-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
+          
+          <!-- Cold Ischemia Time -->
+          <div>
+            <label class="mb-2.5 block text-black dark:text-white">
+              Cold Ischemia Time (minutes) <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="number"
+              formControlName="coldIschemiaTime"
+              placeholder="180"
+              [class.border-red-500]="isFieldInvalid(transplantForm, 'coldIschemiaTime')"
+              class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary dark:border-form-strokedark dark:bg-form-input dark:text-white"
+            />
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Time kidney is preserved in cold storage
+            </p>
+            <p *ngIf="isFieldInvalid(transplantForm, 'coldIschemiaTime')" class="mt-1 text-xs text-red-500">
+              {{ getFieldError(transplantForm, 'coldIschemiaTime') }}
+            </p>
+          </div>
+
+          <!-- Graft Status -->
+          <div>
+            <label class="mb-2.5 block text-black dark:text-white">
+              Graft Status <span class="text-red-500">*</span>
+            </label>
+            <select
+              formControlName="graftStatus"
+              [class.border-red-500]="isFieldInvalid(transplantForm, 'graftStatus')"
+              class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary dark:border-form-strokedark dark:bg-form-input dark:text-white"
+            >
+              <option *ngFor="let status of graftStatuses" [value]="status">
+                {{ status.replace(/_/g, ' ') }}
+              </option>
+            </select>
+            <p *ngIf="isFieldInvalid(transplantForm, 'graftStatus')" class="mt-1 text-xs text-red-500">
+              {{ getFieldError(transplantForm, 'graftStatus') }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Row 3 - File Upload -->
+        <div class="mb-6">
+          <label class="mb-2.5 block text-black dark:text-white">
+            Surgical Report (PDF)
+          </label>
+          <input
+            type="file"
+            accept=".pdf"
+            (change)="onFileSelected($event)"
+            class="w-full cursor-pointer rounded border-[1.5px] border-stroke bg-transparent outline-none transition file:mr-5 file:border-collapse file:cursor-pointer file:border-0 file:border-r file:border-solid file:border-stroke file:bg-whiter file:px-5 file:py-3 file:hover:bg-primary file:hover:bg-opacity-10 focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:file:border-form-strokedark dark:file:bg-white/30 dark:file:text-white dark:focus:border-primary"
+          />
+          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            Upload surgical report in PDF format (optional)
+          </p>
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="border-t border-stroke px-6 py-4 dark:border-strokedark">
+        <div class="flex justify-end">
+          <button
+            type="button"
+            (click)="nextStep()"
+            [disabled]="!transplantForm.valid || isLoading"
+            class="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-10 py-3 text-center font-medium text-white hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Next: HLA Compatibility
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path d="M7.5 15L12.5 10L7.5 5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- STEP 2: HLA Compatibility -->
+  <div *ngIf="currentStep === 2" class="space-y-6">
+    
+    <form [formGroup]="hlaForm">
+      
+      <!-- Donor HLA Card -->
+      <div class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+        <div class="border-b border-stroke px-6 py-4 dark:border-strokedark">
+          <h3 class="font-medium text-black dark:text-white">Donor HLA Typing</h3>
+        </div>
+        
+        <div class="p-6">
+          <div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
+            
+            <!-- Donor HLA-A -->
+            <div>
+              <label class="mb-2.5 block text-black dark:text-white">
+                HLA-A <span class="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                formControlName="donorHlaA"
+                placeholder="e.g., A*02:01"
+                [class.border-red-500]="isFieldInvalid(hlaForm, 'donorHlaA')"
+                class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary dark:border-form-strokedark dark:bg-form-input dark:text-white"
+              />
+              <p *ngIf="isFieldInvalid(hlaForm, 'donorHlaA')" class="mt-1 text-xs text-red-500">
+                {{ getFieldError(hlaForm, 'donorHlaA') }}
+              </p>
+            </div>
+
+            <!-- Donor HLA-B -->
+            <div>
+              <label class="mb-2.5 block text-black dark:text-white">
+                HLA-B <span class="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                formControlName="donorHlaB"
+                placeholder="e.g., B*27:05"
+                [class.border-red-500]="isFieldInvalid(hlaForm, 'donorHlaB')"
+                class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary dark:border-form-strokedark dark:bg-form-input dark:text-white"
+              />
+              <p *ngIf="isFieldInvalid(hlaForm, 'donorHlaB')" class="mt-1 text-xs text-red-500">
+                {{ getFieldError(hlaForm, 'donorHlaB') }}
+              </p>
+            </div>
+
+            <!-- Donor HLA-DR -->
+            <div>
+              <label class="mb-2.5 block text-black dark:text-white">
+                HLA-DR <span class="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                formControlName="donorHlaDr"
+                placeholder="e.g., DR*04:01"
+                [class.border-red-500]="isFieldInvalid(hlaForm, 'donorHlaDr')"
+                class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary dark:border-form-strokedark dark:bg-form-input dark:text-white"
+              />
+              <p *ngIf="isFieldInvalid(hlaForm, 'donorHlaDr')" class="mt-1 text-xs text-red-500">
+                {{ getFieldError(hlaForm, 'donorHlaDr') }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recipient HLA Card -->
+      <div class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+        <div class="border-b border-stroke px-6 py-4 dark:border-strokedark">
+          <h3 class="font-medium text-black dark:text-white">Recipient HLA Typing</h3>
+        </div>
+        
+        <div class="p-6">
+          <div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
+            
+            <!-- Recipient HLA-A -->
+            <div>
+              <label class="mb-2.5 block text-black dark:text-white">
+                HLA-A <span class="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                formControlName="recipientHlaA"
+                placeholder="e.g., A*02:01"
+                [class.border-red-500]="isFieldInvalid(hlaForm, 'recipientHlaA')"
+                class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary dark:border-form-strokedark dark:bg-form-input dark:text-white"
+              />
+              <p *ngIf="isFieldInvalid(hlaForm, 'recipientHlaA')" class="mt-1 text-xs text-red-500">
+                {{ getFieldError(hlaForm, 'recipientHlaA') }}
+              </p>
+            </div>
+
+            <!-- Recipient HLA-B -->
+            <div>
+              <label class="mb-2.5 block text-black dark:text-white">
+                HLA-B <span class="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                formControlName="recipientHlaB"
+                placeholder="e.g., B*27:05"
+                [class.border-red-500]="isFieldInvalid(hlaForm, 'recipientHlaB')"
+                class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary dark:border-form-strokedark dark:bg-form-input dark:text-white"
+              />
+              <p *ngIf="isFieldInvalid(hlaForm, 'recipientHlaB')" class="mt-1 text-xs text-red-500">
+                {{ getFieldError(hlaForm, 'recipientHlaB') }}
+              </p>
+            </div>
+
+            <!-- Recipient HLA-DR -->
+            <div>
+              <label class="mb-2.5 block text-black dark:text-white">
+                HLA-DR <span class="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                formControlName="recipientHlaDr"
+                placeholder="e.g., DR*04:01"
+                [class.border-red-500]="isFieldInvalid(hlaForm, 'recipientHlaDr')"
+                class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary dark:border-form-strokedark dark:bg-form-input dark:text-white"
+              />
+              <p *ngIf="isFieldInvalid(hlaForm, 'recipientHlaDr')" class="mt-1 text-xs text-red-500">
+                {{ getFieldError(hlaForm, 'recipientHlaDr') }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cross-Match Result Card -->
+      <div class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+        <div class="border-b border-stroke px-6 py-4 dark:border-strokedark">
+          <h3 class="font-medium text-black dark:text-white">Cross-Match Testing</h3>
+        </div>
+        
+        <div class="p-6">
+          <div class="max-w-md">
+            <label class="mb-2.5 block text-black dark:text-white">
+              Cross-Match Result <span class="text-red-500">*</span>
+            </label>
+            <select
+              formControlName="crossMatchResult"
+              [class.border-red-500]="isFieldInvalid(hlaForm, 'crossMatchResult')"
+              class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary dark:border-form-strokedark dark:bg-form-input dark:text-white"
+            >
+              <option value="">Select result</option>
+              <option *ngFor="let result of crossMatchResults" [value]="result">
+                {{ result }}
+              </option>
+            </select>
+            <p *ngIf="isFieldInvalid(hlaForm, 'crossMatchResult')" class="mt-1 text-xs text-red-500">
+              {{ getFieldError(hlaForm, 'crossMatchResult') }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="flex justify-between gap-4">
+        <button
+          type="button"
+          (click)="previousStep()"
+          [disabled]="isLoading"
+          class="inline-flex items-center justify-center gap-2 rounded-md border border-stroke px-10 py-3 text-center font-medium text-black hover:bg-gray-2 disabled:opacity-50 dark:border-strokedark dark:text-white"
+        >
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Back
+        </button>
+        
+        <button
+          type="button"
+          (click)="saveHLACompatibility()"
+          [disabled]="!hlaForm.valid || isLoading"
+          class="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-10 py-3 text-center font-medium text-white hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <span *ngIf="!isLoading">Complete & Generate Protocol</span>
+          <span *ngIf="isLoading" class="flex items-center gap-2">
+            <span class="h-4 w-4 animate-spin rounded-full border-2 border-solid border-white border-t-transparent"></span>
+            Saving...
+          </span>
+        </button>
+      </div>
+    </form>
+  </div>
+
+</div>

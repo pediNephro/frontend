@@ -1,0 +1,183 @@
+<!-- surveillance-protocol-detail.component.html -->
+<div class="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10">
+
+  <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <h2 class="text-title-md2 font-bold text-black dark:text-white">Surveillance Protocol Detail</h2>
+    <nav>
+      <ol class="flex items-center gap-2">
+        <li><a class="font-medium" routerLink="/">Dashboard /</a></li>
+        <li><a class="font-medium" routerLink="/kidney-transplants">Kidney Transplants /</a></li>
+        <li class="font-medium text-blue-500">Surveillance Protocol</li>
+      </ol>
+    </nav>
+  </div>
+
+  <div *ngIf="isLoading" class="flex items-center justify-center py-24">
+    <span class="h-10 w-10 animate-spin rounded-full border-4 border-solid border-primary border-t-transparent"></span>
+  </div>
+
+  <div *ngIf="error && !isLoading" class="flex w-full border-l-6 border-red-500 bg-red-100 dark:bg-red-900/30 px-7 py-4 shadow-md">
+    <p class="text-red-700 dark:text-red-300">{{ error }}</p>
+  </div>
+
+  <ng-container *ngIf="protocol && !isLoading">
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+
+      <!-- Left: Protocol Details -->
+      <div class="lg:col-span-2 space-y-6">
+
+        <!-- Current Phase Card -->
+        <div class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+          <div class="border-b border-stroke px-6 py-4 dark:border-strokedark">
+            <h3 class="font-medium text-black dark:text-white">Current Phase</h3>
+          </div>
+          <div class="p-6">
+            <div class="flex items-center justify-between mb-4">
+              <span class="inline-flex rounded-full px-4 py-1.5 text-sm font-semibold" [ngClass]="getPhaseColor(protocol.currentPhase)">
+                {{ getPhaseDisplayName(protocol.currentPhase) }}
+              </span>
+              <div class="text-right">
+                <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Completion</p>
+                <p class="text-lg font-bold" [ngClass]="getCompletionColor()">{{ getCompletionPercentage() }}%</p>
+              </div>
+            </div>
+            <p class="text-sm text-gray-600 dark:text-gray-400">
+              {{ getPhaseDescription(protocol.currentPhase) }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Schedule Information -->
+        <div class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+          <div class="border-b border-stroke px-6 py-4 dark:border-strokedark">
+            <h3 class="font-medium text-black dark:text-white">Schedule Information</h3>
+          </div>
+          <div class="p-6">
+            <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+
+              <!-- Next Consultation -->
+              <div class="rounded-sm border border-stroke p-4 dark:border-strokedark">
+                <div class="flex items-center justify-between mb-2">
+                  <p class="text-sm font-medium text-black dark:text-white">Next Consultation</p>
+                  <span *ngIf="isDateOverdue(protocol.nextConsultationDate)" class="inline-flex rounded-full bg-red-100 px-2 py-1 text-xs font-semibold text-red-800 dark:bg-red-900/30 dark:text-red-400">
+                    Overdue
+                  </span>
+                </div>
+                <p class="text-lg font-bold text-black dark:text-white mb-1">{{ formatDate(protocol.nextConsultationDate) }}</p>
+                <p *ngIf="getDaysUntil(protocol.nextConsultationDate) !== null" class="text-sm" [ngClass]="getDaysUntil(protocol.nextConsultationDate)! < 0 ? 'text-red-600' : 'text-gray-600 dark:text-gray-400'">
+                  {{ getDaysUntil(protocol.nextConsultationDate)! < 0 ? (getAbsoluteValue(getDaysUntil(protocol.nextConsultationDate)!) + ' days overdue') : (getDaysUntil(protocol.nextConsultationDate)! + ' days remaining') }}
+                </p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Every {{ protocol.consultationFrequency }} days
+                </p>
+              </div>
+
+              <!-- Next Lab Test -->
+              <div class="rounded-sm border border-stroke p-4 dark:border-strokedark">
+                <div class="flex items-center justify-between mb-2">
+                  <p class="text-sm font-medium text-black dark:text-white">Next Lab Test</p>
+                  <span *ngIf="isDateOverdue(protocol.nextLabTestDate)" class="inline-flex rounded-full bg-red-100 px-2 py-1 text-xs font-semibold text-red-800 dark:bg-red-900/30 dark:text-red-400">
+                    Overdue
+                  </span>
+                </div>
+                <p class="text-lg font-bold text-black dark:text-white mb-1">{{ formatDate(protocol.nextLabTestDate) }}</p>
+                <p *ngIf="getDaysUntil(protocol.nextLabTestDate) !== null" class="text-sm" [ngClass]="getDaysUntil(protocol.nextLabTestDate)! < 0 ? 'text-red-600' : 'text-gray-600 dark:text-gray-400'">
+                  {{ getDaysUntil(protocol.nextLabTestDate)! < 0 ? (getAbsoluteValue(getDaysUntil(protocol.nextLabTestDate)!) + ' days overdue') : (getDaysUntil(protocol.nextLabTestDate)! + ' days remaining') }}
+                </p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Every {{ protocol.labTestFrequency }} days
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Protocol Metadata -->
+        <div class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+          <div class="border-b border-stroke px-6 py-4 dark:border-strokedark">
+            <h3 class="font-medium text-black dark:text-white">Protocol Information</h3>
+          </div>
+          <div class="p-6">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">Created</p>
+                <p class="text-sm font-medium text-black dark:text-white">{{ protocol.createdAt ? formatDate(protocol.createdAt) : 'N/A' }}</p>
+              </div>
+              <div>
+                <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">Last Updated</p>
+                <p class="text-sm font-medium text-black dark:text-white">{{ protocol.updatedAt ? formatDate(protocol.updatedAt) : 'N/A' }}</p>
+              </div>
+              <div *ngIf="protocol.isModified" class="sm:col-span-2">
+                <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">Modification Reason</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">{{ protocol.modificationReason || 'No reason provided' }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Actions -->
+      <div class="space-y-6">
+
+        <!-- Quick Actions -->
+        <div class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+          <div class="border-b border-stroke px-6 py-4 dark:border-strokedark">
+            <h3 class="font-medium text-black dark:text-white">Actions</h3>
+          </div>
+          <div class="p-6 space-y-3">
+            <a
+              [routerLink]="['/kidney-transplants', protocol.transplantId, 'surveillance-protocols', protocol.id, 'edit']"
+              class="flex w-full items-center justify-center gap-2 rounded-md border border-stroke px-4 py-2 text-sm font-medium text-black hover:bg-gray-1 dark:border-strokedark dark:text-white dark:hover:bg-meta-4"
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M11 5H5V11H11V5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M8 3V5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M8 11V13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Edit Protocol
+            </a>
+            <a
+              [routerLink]="['/kidney-transplants', protocol.transplantId, 'surveillance-protocols']"
+              class="flex w-full items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-black hover:bg-opacity-90"
+            >
+              ← Back to List
+            </a>
+          </div>
+        </div>
+
+        <!-- Transplant Info -->
+        <div class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+          <div class="border-b border-stroke px-6 py-4 dark:border-strokedark">
+            <h3 class="font-medium text-black dark:text-white">Related Transplant</h3>
+          </div>
+          <div class="p-6">
+            <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">Transplant ID</p>
+            <p class="text-sm font-medium text-black dark:text-white mb-3">{{ protocol.transplantId }}</p>
+            <a
+              [routerLink]="['/transplant', protocol.transplantId]"
+              class="inline-flex items-center gap-1 text-sm text-blue-500 hover:underline"
+            >
+              View Transplant Details →
+            </a>
+          </div>
+        </div>
+
+        <!-- Progress Indicator -->
+        <div class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+          <div class="border-b border-stroke px-6 py-4 dark:border-strokedark">
+            <h3 class="font-medium text-black dark:text-white">Progress</h3>
+          </div>
+          <div class="p-6">
+            <div class="mb-2 flex items-center justify-between">
+              <span class="text-sm font-medium text-black dark:text-white">Completion</span>
+              <span class="text-sm font-medium text-black dark:text-white">{{ getCompletionPercentage() }}%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+              <div class="bg-primary h-2.5 rounded-full transition-all duration-300" [style.width.%]="getCompletionPercentage()"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</div>
