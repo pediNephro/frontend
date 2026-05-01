@@ -1,0 +1,77 @@
+<div class="p-8 ml-[290px] transition-all">
+
+  <div class="flex justify-between items-center mb-6">
+    <h2 class="text-2xl font-semibold text-gray-800 dark:text-white">
+      Report Schedules
+    </h2>
+
+    <a routerLink="/schedules/create"
+       class="bg-brand-500 hover:bg-brand-600 text-white px-4 py-2 rounded-xl shadow">
+      + New Schedule
+    </a>
+  </div>
+
+  <div class="bg-white dark:bg-gray-900 rounded-2xl shadow overflow-hidden">
+
+    <table class="w-full text-sm text-left">
+      <thead class="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 uppercase text-xs">
+        <tr>
+          <th class="px-6 py-4">Name</th>
+          <th class="px-6 py-4">Type</th>
+          <th class="px-6 py-4">Next Execution</th>
+          <th class="px-6 py-4">Status</th>
+          <th class="px-6 py-4 text-right">Actions</th>
+        </tr>
+      </thead>
+
+      <tbody class="divide-y dark:divide-gray-700">
+        <tr *ngFor="let s of schedules"
+            class="hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+
+          <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">
+            {{ s.scheduleName }}
+          </td>
+
+          <td class="px-6 py-4">
+            <span class="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-600">
+              {{ s.scheduleType }}
+            </span>
+          </td>
+
+          <td class="px-6 py-4">
+            {{ s.nextExecutionDate | date:'medium' }}
+          </td>
+
+          <td class="px-6 py-4">
+            <span
+              [ngClass]="s.active
+                ? 'bg-green-100 text-green-600'
+                : 'bg-red-100 text-red-600'"
+              class="px-3 py-1 rounded-full text-xs font-medium">
+              {{ s.active ? 'Active' : 'Inactive' }}
+            </span>
+          </td>
+
+          <td class="px-6 py-4 text-right flex justify-end gap-3">
+            <a [routerLink]="['/schedules/edit', s.id]"
+               class="text-blue-600 hover:underline">
+              Edit
+            </a>
+
+            <button (click)="delete(s.id)"
+                    class="text-red-600 hover:underline">
+              Delete
+            </button>
+          </td>
+        </tr>
+
+        <tr *ngIf="schedules.length === 0">
+          <td colspan="5" class="px-6 py-6 text-center text-gray-500 dark:text-gray-400">
+            No schedules found.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+  </div>
+</div>

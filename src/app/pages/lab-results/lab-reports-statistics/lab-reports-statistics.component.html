@@ -1,0 +1,128 @@
+<div class="p-6">
+  <!-- Header -->
+  <div class="mb-6 flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">📊 Statistiques biologiques</h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Analyse des rapports de biologie sur la période sélectionnée</p>
+    </div>
+    <a routerLink="/lab-reports" class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+      ← Retour
+    </a>
+  </div>
+
+  <!-- Filtres dates -->
+  <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-4 mb-6 border border-gray-100 dark:border-gray-700">
+    <div class="flex gap-4 items-end flex-wrap">
+      <div>
+        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Du</label>
+        <input type="date" [(ngModel)]="fromDate" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 dark:text-white text-sm"/>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Au</label>
+        <input type="date" [(ngModel)]="toDate" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 dark:text-white text-sm"/>
+      </div>
+      <button (click)="load()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium">
+        🔍 Actualiser
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="text-center py-12 text-blue-600 animate-pulse font-semibold">⏳ Chargement des statistiques...</div>
+  <div *ngIf="error" class="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg mb-4">❌ {{ error }}</div>
+
+  <ng-container *ngIf="!loading && stats">
+
+    <!-- KPI Cards -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 shadow">
+        <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Total rapports</p>
+        <p class="text-3xl font-bold text-gray-900 dark:text-white">{{ stats.totalReports }}</p>
+      </div>
+      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 shadow">
+        <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Rapports normaux</p>
+        <p class="text-3xl font-bold text-green-600">{{ stats.normalReports }}</p>
+      </div>
+      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 shadow">
+        <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Rapports anormaux</p>
+        <p class="text-3xl font-bold text-red-600">{{ stats.abnormalReports }}</p>
+      </div>
+      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 shadow">
+        <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Taux d'anomalie</p>
+        <p class="text-3xl font-bold text-orange-500">{{ stats.abnormalRate | number:'1.1-1' }}%</p>
+      </div>
+    </div>
+
+    <!-- Sévérité moyenne -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 shadow mb-6 flex items-center gap-4">
+      <div class="w-14 h-14 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-2xl">⚠️</div>
+      <div>
+        <p class="text-xs text-gray-500 dark:text-gray-400">Sévérité moyenne des résultats</p>
+        <p class="text-2xl font-bold text-purple-700 dark:text-purple-400">{{ stats.avgSeverity | number:'1.2-2' }}</p>
+      </div>
+    </div>
+
+    <!-- Charts row -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+
+      <!-- Trend chart -->
+      <div class="md:col-span-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 shadow">
+        <h2 class="text-base font-semibold text-gray-900 dark:text-white mb-4">📈 Évolution quotidienne</h2>
+        <canvas #trendChart height="120"></canvas>
+      </div>
+
+      <!-- Status doughnut -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 shadow flex flex-col">
+        <h2 class="text-base font-semibold text-gray-900 dark:text-white mb-4">🥧 Répartition statut</h2>
+        <div class="flex-1 flex items-center justify-center">
+          <canvas #statusChart></canvas>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Top patients à risque -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow">
+      <h2 class="text-base font-semibold text-gray-900 dark:text-white mb-4">🚨 Patients à risque élevé</h2>
+      <div *ngIf="(stats.topRiskPatients.length ?? 0) === 0" class="text-center py-6 text-gray-400 text-sm">
+        Aucun patient à risque identifié sur cette période.
+      </div>
+      <div class="overflow-x-auto" *ngIf="(stats.topRiskPatients.length ?? 0) > 0">
+        <table class="w-full text-left">
+          <thead class="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+            <tr>
+              <th class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Patient</th>
+              <th class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Rapports</th>
+              <th class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Anormaux</th>
+              <th class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Sévérité max</th>
+              <th class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Score risque</th>
+              <th class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Action</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+            <tr *ngFor="let p of stats.topRiskPatients" class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+              <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">#{{ p.patientId }}</td>
+              <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{{ p.totalReports }}</td>
+              <td class="px-4 py-3">
+                <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-bold">{{ p.abnormalReports }}</span>
+              </td>
+              <td class="px-4 py-3 text-sm font-semibold text-orange-600">{{ p.maxSeverity | number:'1.2-2' }}</td>
+              <td class="px-4 py-3">
+                <div class="flex items-center gap-2">
+                  <div class="flex-1 bg-gray-200 dark:bg-gray-600 rounded-full h-2 w-24">
+                    <div class="bg-red-500 h-2 rounded-full" [style.width.%]="Math.min(p.riskScore * 10, 100)"></div>
+                  </div>
+                  <span class="text-xs font-semibold text-red-600">{{ p.riskScore | number:'1.2-2' }}</span>
+                </div>
+              </td>
+              <td class="px-4 py-3">
+                <a [routerLink]="['/lab-reports']" [queryParams]="{ patientId: p.patientId }"
+                   class="text-blue-600 hover:underline text-sm">Voir rapports</a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </ng-container>
+</div>

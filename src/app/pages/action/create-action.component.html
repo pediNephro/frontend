@@ -1,0 +1,71 @@
+<div class="max-w-3xl mx-auto p-6 bg-white rounded-xl shadow">
+  <h2 class="text-xl font-semibold mb-6 text-gray-800 dark:text-white">
+    {{ isEditMode ? 'Edit Action' : 'Create Action' }}
+  </h2>
+
+  <form [formGroup]="actionForm" (ngSubmit)="onSubmit()" class="space-y-4">
+    <div>
+      <label class="block mb-1 text-gray-700 dark:text-gray-300">Category</label>
+      <input
+        type="text"
+        formControlName="categoryAct"
+        class="w-full border rounded p-2"
+        placeholder="Enter category"
+      />
+      <small
+        class="text-red-500"
+        *ngIf="actionForm.get('categoryAct')?.touched && actionForm.get('categoryAct')?.invalid"
+      >
+        Category is required.
+      </small>
+    </div>
+
+    <div>
+      <label class="block mb-1 text-gray-700 dark:text-gray-300">Action Name</label>
+      <input
+        type="text"
+        formControlName="nomAct"
+        class="w-full border rounded p-2"
+        placeholder="Enter action name"
+      />
+      <small
+        class="text-red-500"
+        *ngIf="actionForm.get('nomAct')?.touched && actionForm.get('nomAct')?.invalid"
+      >
+        Action name is required.
+      </small>
+    </div>
+
+    <div>
+      <label class="block mb-1 text-gray-700 dark:text-gray-300">Price (TND)</label>
+      <input
+        type="number"
+        step="0.01"
+        formControlName="prixAct"
+        class="w-full border rounded p-2"
+        placeholder="Enter price"
+      />
+      <small
+        class="text-red-500"
+        *ngIf="actionForm.get('prixAct')?.touched && actionForm.get('prixAct')?.invalid"
+      >
+        Valid price is required.
+      </small>
+    </div>
+
+    <div class="flex gap-3">
+      <button
+        type="submit"
+        class="bg-brand-500 hover:bg-brand-600 text-white px-4 py-2 rounded-xl shadow"
+      >
+        {{ isEditMode ? 'Update Action' : 'Create Action' }}
+      </button>
+      <a
+        routerLink="/actions"
+        class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-xl shadow"
+      >
+        Cancel
+      </a>
+    </div>
+  </form>
+</div>

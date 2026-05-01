@@ -1,0 +1,172 @@
+<div class="p-6">
+  <!-- Header -->
+  <div class="mb-6 flex items-center justify-between">
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">🔬 Détails du rapport</h1>
+    <div class="flex gap-2">
+      <a routerLink="/lab-reports"
+         class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+        ← Retour
+      </a>
+      <a [routerLink]="['/lab-reports', reportId, 'edit']"
+         class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 text-sm font-medium">
+        ✏️ Modifier
+      </a>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="text-center py-8 text-blue-600 animate-pulse">⏳ Chargement...</div>
+  <div *ngIf="error" class="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg mb-4">❌ {{ error }}</div>
+
+  <ng-container *ngIf="!loading && reportDto">
+    <!-- Résumé -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mb-6 shadow">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+        <div>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Patient</p>
+          <p class="font-semibold text-gray-900 dark:text-white">#{{ reportDto.patientId }}</p>
+        </div>
+        <div>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Date</p>
+          <p class="font-semibold text-gray-900 dark:text-white">{{ reportDto.reportDate }}</p>
+        </div>
+        <div>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Statut</p>
+          <span class="px-3 py-1 rounded-full text-xs font-bold" [ngClass]="reportBadgeClass(reportDto.reportStatus)">
+            {{ reportDto.reportStatus }}
+          </span>
+        </div>
+        <div>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Résultats anormaux</p>
+          <span class="px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded-full text-sm font-bold text-gray-900 dark:text-white">
+            {{ reportDto.abnormalCount }}
+          </span>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-gray-100 dark:border-gray-700 pt-4">
+        <div>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Type d'analyse</p>
+          <p class="font-medium text-gray-900 dark:text-white">{{ reportDto.analysisType || '—' }}</p>
+        </div>
+        <div>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Laboratoire</p>
+          <p class="font-medium text-gray-900 dark:text-white">{{ reportDto.laboratoryName || '—' }}</p>
+        </div>
+        <div class="md:col-span-2" *ngIf="reportDto.comment">
+          <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Commentaire</p>
+          <p class="text-sm text-gray-700 dark:text-gray-300">{{ reportDto.comment }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Résultats -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow">
+      <div class="mb-4 flex items-center justify-between">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">📊 Résultats biologiques</h2>
+        <button (click)="toggleAddForm()"
+                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium">
+          + Ajouter un résultat
+        </button>
+      </div>
+
+      <!-- Formulaire ajout -->
+      <div *ngIf="showAddForm" class="mb-6 bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 border border-blue-200 dark:border-blue-800">
+        <h3 class="text-sm font-semibold text-blue-800 dark:text-blue-300 mb-3">Nouveau résultat</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <input [(ngModel)]="newResult.parameterName" placeholder="Paramètre (ex: Créatinine)"
+                 class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 dark:text-white text-sm"/>
+          <input type="number" [(ngModel)]="newResult.value" placeholder="Valeur"
+                 class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 dark:text-white text-sm"/>
+          <input [(ngModel)]="newResult.unit" placeholder="Unité (ex: mg/L)"
+                 class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 dark:text-white text-sm"/>
+          <input type="number" [(ngModel)]="newResult.normalMinValue" placeholder="Min normal"
+                 class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 dark:text-white text-sm"/>
+          <input type="number" [(ngModel)]="newResult.normalMaxValue" placeholder="Max normal"
+                 class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 dark:text-white text-sm"/>
+        </div>
+        <div class="mt-3 flex gap-2">
+          <button (click)="addResult()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium">
+            ✅ Enregistrer
+          </button>
+          <button (click)="toggleAddForm()" class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-gray-700">
+            Annuler
+          </button>
+        </div>
+      </div>
+
+      <!-- Table résultats -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-left">
+          <thead class="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+            <tr>
+              <th class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Paramètre</th>
+              <th class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Valeur</th>
+              <th class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Norme</th>
+              <th class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Statut</th>
+              <th class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Sévérité</th>
+              <th class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+            <ng-container *ngFor="let res of resultsDto">
+              <!-- Mode édition -->
+              <tr *ngIf="editingResultId === res.id" class="bg-yellow-50 dark:bg-yellow-900/10">
+                <td class="px-4 py-3">
+                  <input [(ngModel)]="editResult.parameterName"
+                         class="w-full border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm dark:bg-gray-700 dark:text-white"/>
+                </td>
+                <td class="px-4 py-3">
+                  <input type="number" [(ngModel)]="editResult.value"
+                         class="w-24 border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm dark:bg-gray-700 dark:text-white"/>
+                </td>
+                <td class="px-4 py-3">
+                  <div class="flex items-center gap-1">
+                    <input type="number" [(ngModel)]="editResult.normalMinValue"
+                           class="w-16 border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm dark:bg-gray-700 dark:text-white"/>
+                    <span class="text-gray-400">-</span>
+                    <input type="number" [(ngModel)]="editResult.normalMaxValue"
+                           class="w-16 border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm dark:bg-gray-700 dark:text-white"/>
+                  </div>
+                </td>
+                <td class="px-4 py-3 text-xs text-gray-400">auto</td>
+                <td class="px-4 py-3 text-xs text-gray-400">auto</td>
+                <td class="px-4 py-3">
+                  <div class="flex gap-2">
+                    <button (click)="saveEdit()" class="text-green-600 hover:underline text-sm font-medium">✅ Sauver</button>
+                    <button (click)="cancelEdit()" class="text-gray-600 hover:underline text-sm">Annuler</button>
+                  </div>
+                </td>
+              </tr>
+              <!-- Mode lecture -->
+              <tr *ngIf="editingResultId !== res.id" class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                <td class="px-4 py-3">
+                  <div class="font-medium text-gray-900 dark:text-white text-sm">{{ res.parameterName }}</div>
+                  <div class="text-xs text-gray-400">{{ res.unit }}</div>
+                </td>
+                <td class="px-4 py-3 font-semibold text-gray-900 dark:text-white">{{ res.value }}</td>
+                <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{{ res.normalMinValue }} – {{ res.normalMaxValue }}</td>
+                <td class="px-4 py-3">
+                  <span class="px-2 py-1 rounded-full text-xs font-bold" [ngClass]="badgeClass(res.status)">
+                    {{ res.status }}
+                  </span>
+                  <span *ngIf="res.isAbnormal" class="ml-1 text-xs font-semibold text-red-600">⚠️</span>
+                </td>
+                <td class="px-4 py-3">
+                  <span class="font-semibold text-gray-900 dark:text-white text-sm">{{ res.severity.toFixed(2) }}</span>
+                </td>
+                <td class="px-4 py-3">
+                  <div class="flex gap-2">
+                    <button (click)="startEdit(res)" class="text-blue-600 hover:underline text-sm">✏️</button>
+                    <button (click)="deleteResult(res.id)" class="text-red-600 hover:underline text-sm">🗑️</button>
+                  </div>
+                </td>
+              </tr>
+            </ng-container>
+            <tr *ngIf="resultsDto.length === 0">
+              <td colspan="6" class="px-4 py-8 text-center text-gray-400 text-sm">Aucun résultat. Cliquez sur "+ Ajouter un résultat".</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </ng-container>
+</div>

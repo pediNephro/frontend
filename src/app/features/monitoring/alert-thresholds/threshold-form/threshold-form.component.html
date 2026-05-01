@@ -1,0 +1,263 @@
+<!-- File: src/app/pages/alert-thresholds/threshold-form/threshold-form.component.html -->
+
+<div class="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10">
+  
+  <!-- Page Header -->
+  <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <h2 class="text-title-md2 font-bold text-black dark:text-white">
+      {{ isEditMode ? 'Edit Alert Threshold' : 'Create Alert Threshold' }}
+    </h2>
+    
+    <nav>
+      <ol class="flex items-center gap-2">
+        <li><a class="font-medium" routerLink="/">Dashboard /</a></li>
+        <li><a class="font-medium" routerLink="/thresholds">Thresholds /</a></li>
+        <li class="font-medium text-primary">{{ isEditMode ? 'Edit' : 'Create' }}</li>
+      </ol>
+    </nav>
+  </div>
+
+  <!-- Error Alert -->
+  <div *ngIf="error" class="mb-4 flex w-full border-l-6 border-red-500 bg-red-100 dark:bg-red-900/30 px-7 py-4 shadow-md">
+    <div class="mr-5 flex h-9 w-9 items-center justify-center rounded-lg bg-red-500">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+        <path d="M6.4917 7.65579L11.106 12.2645C11.2545 12.4128 11.4715 12.5 11.6738 12.5C11.8762 12.5 12.0931 12.4128 12.2416 12.2645C12.5621 11.9445 12.5623 11.4317 12.2423 11.1114L7.64539 6.50351L12.2589 1.91221C12.5802 1.59132 12.5802 1.07805 12.2595 0.757793C11.9393 0.437994 11.4268 0.437869 11.1064 0.757418L6.49234 5.34931L1.89459 0.740581C1.57364 0.420019 1.0608 0.420019 0.740487 0.739944C0.42005 1.05999 0.419837 1.57279 0.73985 1.89309L6.4917 7.65579Z" fill="white" stroke="white"/>
+      </svg>
+    </div>
+    <div class="w-full">
+      <h5 class="mb-1 text-lg font-bold text-red-800 dark:text-red-400">Error</h5>
+      <p class="text-base text-red-700 dark:text-red-300">{{ error }}</p>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="flex h-96 items-center justify-center">
+    <div class="h-16 w-16 animate-spin rounded-full border-4 border-solid border-primary border-t-transparent"></div>
+  </div>
+
+  <!-- Form -->
+  <form *ngIf="!loading" [formGroup]="thresholdForm" (ngSubmit)="onSubmit()" class="space-y-6">
+    
+    <!-- Basic Information Card -->
+    <div class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+      <div class="border-b border-stroke px-6 py-4 dark:border-strokedark">
+        <h3 class="font-medium text-black dark:text-white">Basic Information</h3>
+      </div>
+      
+      <div class="p-6">
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          
+          <!-- Patient ID -->
+          <div>
+            <label class="mb-2.5 block text-black dark:text-white">
+              Patient ID <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="number"
+              formControlName="patientId"
+              placeholder="Enter patient ID"
+              [class.border-red-500]="isFieldInvalid('patientId')"
+              class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary dark:border-form-strokedark dark:bg-form-input dark:text-white"
+            />
+            <p *ngIf="isFieldInvalid('patientId')" class="mt-1 text-xs text-red-500">
+              {{ getFieldError('patientId') }}
+            </p>
+          </div>
+
+          <!-- Created By -->
+          <div>
+            <label class="mb-2.5 block text-black dark:text-white">
+              Created By (User ID) <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="number"
+              formControlName="createdBy"
+              placeholder="Enter user ID"
+              [class.border-red-500]="isFieldInvalid('createdBy')"
+              class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary dark:border-form-strokedark dark:bg-form-input dark:text-white"
+            />
+            <p *ngIf="isFieldInvalid('createdBy')" class="mt-1 text-xs text-red-500">
+              {{ getFieldError('createdBy') }}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Threshold Configuration Card -->
+    <div class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+      <div class="border-b border-stroke px-6 py-4 dark:border-strokedark">
+        <h3 class="font-medium text-black dark:text-white">Threshold Configuration</h3>
+      </div>
+      
+      <div class="p-6">
+        <div class="grid grid-cols-1 gap-6">
+          
+          <!-- Parameter -->
+          <div>
+            <label class="mb-2.5 block text-black dark:text-white">
+              Parameter <span class="text-red-500">*</span>
+            </label>
+            <select
+              formControlName="parameter"
+              [class.border-red-500]="isFieldInvalid('parameter')"
+              class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary dark:border-form-strokedark dark:bg-form-input dark:text-white"
+            >
+              <option value="">Select a parameter</option>
+              <option *ngFor="let param of parameters" [value]="param.value">
+                {{ param.label }}
+              </option>
+            </select>
+            <p *ngIf="isFieldInvalid('parameter')" class="mt-1 text-xs text-red-500">
+              {{ getFieldError('parameter') }}
+            </p>
+          </div>
+
+          <!-- Min and Max Thresholds -->
+          <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            
+            <!-- Min Threshold -->
+            <div>
+              <label class="mb-2.5 block text-black dark:text-white">
+                Minimum Threshold
+              </label>
+              <input
+                type="number"
+                step="0.1"
+                formControlName="minThreshold"
+                placeholder="Enter minimum value"
+                [class.border-red-500]="isFieldInvalid('minThreshold')"
+                class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary dark:border-form-strokedark dark:bg-form-input dark:text-white"
+              />
+              <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Alert when value falls below this
+              </p>
+              <p *ngIf="isFieldInvalid('minThreshold')" class="mt-1 text-xs text-red-500">
+                {{ getFieldError('minThreshold') }}
+              </p>
+            </div>
+
+            <!-- Max Threshold -->
+            <div>
+              <label class="mb-2.5 block text-black dark:text-white">
+                Maximum Threshold
+              </label>
+              <input
+                type="number"
+                step="0.1"
+                formControlName="maxThreshold"
+                placeholder="Enter maximum value"
+                [class.border-red-500]="isFieldInvalid('maxThreshold')"
+                class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary dark:border-form-strokedark dark:bg-form-input dark:text-white"
+              />
+              <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Alert when value exceeds this
+              </p>
+              <p *ngIf="isFieldInvalid('maxThreshold')" class="mt-1 text-xs text-red-500">
+                {{ getFieldError('maxThreshold') }}
+              </p>
+            </div>
+          </div>
+
+          <div class="rounded-lg bg-blue-50 p-4 dark:bg-blue-900/20">
+            <p class="text-sm text-blue-800 dark:text-blue-300">
+              <strong>Note:</strong> Set at least one threshold (Min or Max). Both can be set for a range alert.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alert Settings Card -->
+    <div class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+      <div class="border-b border-stroke px-6 py-4 dark:border-strokedark">
+        <h3 class="font-medium text-black dark:text-white">Alert Settings</h3>
+      </div>
+      
+      <div class="p-6">
+        <div class="grid grid-cols-1 gap-6">
+          
+          <!-- Severity -->
+          <div>
+            <label class="mb-2.5 block text-black dark:text-white">
+              Severity Level <span class="text-red-500">*</span>
+            </label>
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <label *ngFor="let sev of severities" 
+                     [class.ring-2]="thresholdForm.get('severity')?.value === sev.value"
+                     [class.ring-primary]="thresholdForm.get('severity')?.value === sev.value"
+                     class="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-stroke p-4 hover:border-primary dark:border-strokedark">
+                <input
+                  type="radio"
+                  formControlName="severity"
+                  [value]="sev.value"
+                  class="h-5 w-5"
+                />
+                <span [class]="sev.class" class="inline-flex rounded-full px-3 py-1 text-xs font-medium text-white">
+                  {{ sev.label }}
+                </span>
+              </label>
+            </div>
+            <p *ngIf="isFieldInvalid('severity')" class="mt-1 text-xs text-red-500">
+              {{ getFieldError('severity') }}
+            </p>
+          </div>
+
+          <!-- Custom Message -->
+          <div>
+            <label class="mb-2.5 block text-black dark:text-white">
+              Custom Alert Message
+            </label>
+            <textarea
+              formControlName="customMessage"
+              rows="3"
+              placeholder="Enter a custom message for this alert (optional)"
+              class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary dark:border-form-strokedark dark:bg-form-input dark:text-white"
+            ></textarea>
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              This message will be shown when the alert is triggered
+            </p>
+          </div>
+
+          <!-- Active Toggle -->
+          <div *ngIf="isEditMode" class="flex items-center gap-3">
+            <label class="relative inline-flex cursor-pointer items-center">
+              <input
+                type="checkbox"
+                formControlName="active"
+                class="peer sr-only"
+              />
+              <div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none dark:border-gray-600 dark:bg-gray-700"></div>
+            </label>
+            <span class="text-sm font-medium text-black dark:text-white">
+              {{ thresholdForm.get('active')?.value ? 'Active' : 'Inactive' }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="flex justify-end gap-4">
+      <button
+        type="button"
+        (click)="onCancel()"
+        [disabled]="submitting"
+        class="inline-flex items-center justify-center rounded-md border border-stroke px-10 py-3 text-center font-medium text-black hover:bg-opacity-90 disabled:opacity-50 dark:border-strokedark dark:text-white"
+      >
+        Cancel
+      </button>
+      
+      <button
+        type="submit"
+        [disabled]="submitting || thresholdForm.invalid"
+        class="inline-flex items-center justify-center gap-2.5 rounded-md bg-primary px-10 py-3 text-center font-medium text-white hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <span *ngIf="submitting" class="h-4 w-4 animate-spin rounded-full border-2 border-solid border-white border-t-transparent"></span>
+        {{ submitting ? 'Saving...' : (isEditMode ? 'Update Threshold' : 'Create Threshold') }}
+      </button>
+    </div>
+
+  </form>
+
+</div>

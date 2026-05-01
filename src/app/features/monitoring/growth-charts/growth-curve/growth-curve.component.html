@@ -1,0 +1,45 @@
+<div class="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10">
+  <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <h2 class="text-title-md2 font-bold text-black dark:text-white">Growth Curve</h2>
+    <nav>
+      <ol class="flex items-center gap-2">
+        <li><a class="font-medium" routerLink="/growth-charts">Growth Charts /</a></li>
+        <li class="font-medium text-primary">Curve</li>
+      </ol>
+    </nav>
+  </div>
+
+  <div class="mb-6 rounded-lg border border-stroke bg-white p-6 shadow-default dark:border-strokedark dark:bg-boxdark">
+    <h3 class="mb-4 text-lg font-semibold text-black dark:text-white">Select patient and chart type</h3>
+    <div class="flex flex-wrap items-end gap-4">
+      <div>
+        <label class="mb-1 block text-sm font-medium text-black dark:text-white">Patient ID</label>
+        <input type="number" min="1" [(ngModel)]="patientId" placeholder="e.g. 1"
+          class="w-32 rounded border border-stroke bg-transparent px-3 py-2 text-black outline-none focus:border-primary dark:border-strokedark dark:bg-meta-4 dark:text-white" />
+      </div>
+      <div>
+        <label class="mb-1 block text-sm font-medium text-black dark:text-white">Chart type</label>
+        <select [(ngModel)]="chartType" class="rounded border border-stroke bg-transparent px-3 py-2 text-black outline-none focus:border-primary dark:border-strokedark dark:bg-meta-4 dark:text-white">
+          <option *ngFor="let t of chartTypes" [value]="t.value">{{ t.label }}</option>
+        </select>
+      </div>
+      <button (click)="loadCurve()" [disabled]="loading"
+        class="rounded bg-primary px-4 py-2 text-white hover:bg-opacity-90 disabled:opacity-50">
+        {{ loading ? 'Loading…' : 'Load curve' }}
+      </button>
+    </div>
+    @if (error) {
+      <p class="mt-3 text-sm text-red-600 dark:text-red-400">{{ error }}</p>
+    }
+  </div>
+
+  @if (data.length > 0) {
+    <div class="rounded-lg border border-stroke bg-white p-6 shadow-default dark:border-strokedark dark:bg-boxdark">
+      <p class="mb-4 text-sm text-gray-600 dark:text-gray-400">
+        Patient {{ patientId }} — {{ getChartTypeLabel() }} ({{ data.length }} points)
+      </p>
+      <apx-chart [series]="series" [chart]="chart" [xaxis]="xaxis" [yaxis]="yaxis"
+        [stroke]="stroke" [tooltip]="tooltip" [grid]="grid"></apx-chart>
+    </div>
+  }
+</div>

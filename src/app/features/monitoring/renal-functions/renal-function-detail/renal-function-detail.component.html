@@ -1,0 +1,277 @@
+<!-- File: src/app/pages/renal-functions/renal-function-detail/renal-function-detail.component.html -->
+
+<div class="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10">
+  
+  <!-- Page Header -->
+  <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <h2 class="text-title-md2 font-bold text-black dark:text-white">
+      Renal Function Details
+    </h2>
+    
+    <nav>
+      <ol class="flex items-center gap-2">
+        <li><a class="font-medium" routerLink="/">Dashboard /</a></li>
+        <li><a class="font-medium" routerLink="/vital-signs">Vital Signs /</a></li>
+        <li class="font-medium text-primary">Renal Function</li>
+      </ol>
+    </nav>
+  </div>
+
+  <!-- Error Alert -->
+  <div *ngIf="error" class="mb-4 flex w-full border-l-6 border-red-500 bg-red-100 dark:bg-red-900/30 px-7 py-4 shadow-md">
+    <div class="mr-5 flex h-9 w-9 items-center justify-center rounded-lg bg-red-500">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+        <path d="M6.4917 7.65579L11.106 12.2645C11.2545 12.4128 11.4715 12.5 11.6738 12.5C11.8762 12.5 12.0931 12.4128 12.2416 12.2645C12.5621 11.9445 12.5623 11.4317 12.2423 11.1114L7.64539 6.50351L12.2589 1.91221C12.5802 1.59132 12.5802 1.07805 12.2595 0.757793C11.9393 0.437994 11.4268 0.437869 11.1064 0.757418L6.49234 5.34931L1.89459 0.740581C1.57364 0.420019 1.0608 0.420019 0.740487 0.739944C0.42005 1.05999 0.419837 1.57279 0.73985 1.89309L6.4917 7.65579Z" fill="white" stroke="white"/>
+      </svg>
+    </div>
+    <div class="w-full">
+      <h5 class="mb-1 text-lg font-bold text-red-800 dark:text-red-400">Error</h5>
+      <p class="text-base text-red-700 dark:text-red-300">{{ error }}</p>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="flex h-96 items-center justify-center">
+    <div class="h-16 w-16 animate-spin rounded-full border-4 border-solid border-primary border-t-transparent"></div>
+  </div>
+
+  <!-- Main Content -->
+  <div *ngIf="!loading && renalFunction">
+    
+    <!-- Action Buttons -->
+    <div class="mb-6 flex flex-wrap gap-3">
+      <button routerLink="/vital-signs" class="inline-flex items-center justify-center gap-2 rounded-md border border-stroke px-5 py-2.5 text-black hover:bg-gray-2 dark:border-strokedark dark:text-white">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <path d="M15 10L5 10M5 10L8 7M5 10L8 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Back to Vital Signs
+      </button>
+      
+      <button *ngIf="renalFunction.vitalSignId" [routerLink]="['/vital-signs', renalFunction.vitalSignId]" class="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-5 py-2.5 text-white hover:bg-opacity-90">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <path d="M8.99981 14.8219C3.43106 14.8219 0.674805 9.50624 0.562305 9.28124C0.47793 9.11249 0.47793 8.88749 0.562305 8.71874C0.674805 8.49374 3.43106 3.20624 8.99981 3.20624C14.5686 3.20624 17.3248 8.49374 17.4373 8.71874C17.5217 8.88749 17.5217 9.11249 17.4373 9.28124C17.3248 9.50624 14.5686 14.8219 8.99981 14.8219Z" fill="white"/>
+        </svg>
+        View Source Vital Sign
+      </button>
+    </div>
+
+    <!-- GFR Overview Card - Large Display -->
+    <div class="mb-6 rounded-sm border border-stroke bg-white p-8 shadow-default dark:border-strokedark dark:bg-boxdark">
+      <div class="flex flex-col items-center justify-center text-center">
+        <p class="mb-2 text-sm font-medium text-gray-500 dark:text-gray-400">Glomerular Filtration Rate (GFR)</p>
+        <div class="mb-4 flex items-baseline gap-2">
+          <span class="text-6xl font-bold text-black dark:text-white">{{ formatNumber(renalFunction.gfr, 1) }}</span>
+          <span class="text-2xl text-gray-500 dark:text-gray-400">mL/min/1.73m²</span>
+        </div>
+        
+        <div class="mb-4 flex items-center gap-3">
+          <span class="text-4xl">{{ getGFRIcon() }}</span>
+          <span [class]="getGFRStatusClass()" class="inline-flex rounded-full px-6 py-2 text-lg font-semibold">
+            {{ getGFRStatus() }}
+          </span>
+        </div>
+        
+        <p class="text-base font-medium text-gray-600 dark:text-gray-300">
+          {{ getGFRStage() }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Primary Metrics Grid -->
+    <div class="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+      
+      <!-- Creatinine Card -->
+      <div class="rounded-sm border border-stroke bg-white p-6 shadow-default dark:border-strokedark dark:bg-boxdark">
+        <div class="mb-4 flex items-center justify-between">
+          <h4 class="text-lg font-semibold text-black dark:text-white">Creatinine Level</h4>
+          <div class="flex h-11 w-11 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30">
+            <svg class="fill-blue-500" width="24" height="24" viewBox="0 0 24 24">
+              <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+            </svg>
+          </div>
+        </div>
+        
+        <div class="mb-4">
+          <p class="text-4xl font-bold text-black dark:text-white">
+            {{ formatNumber(renalFunction.creatinineLevel, 2) }}
+            <span class="text-lg font-normal text-gray-500">mg/dL</span>
+          </p>
+        </div>
+        
+        <span [class]="getCreatinineStatusClass()" class="inline-flex w-full justify-center rounded-full px-3 py-1.5 text-sm font-medium">
+          {{ getCreatinineStatus() }}
+        </span>
+      </div>
+
+      <!-- Urine Output Ratio Card -->
+      <div class="rounded-sm border border-stroke bg-white p-6 shadow-default dark:border-strokedark dark:bg-boxdark">
+        <div class="mb-4 flex items-center justify-between">
+          <h4 class="text-lg font-semibold text-black dark:text-white">Urine Output Ratio</h4>
+          <div class="flex h-11 w-11 items-center justify-center rounded-full bg-cyan-100 dark:bg-cyan-900/30">
+            <svg class="fill-cyan-500" width="24" height="24" viewBox="0 0 24 24">
+              <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+            </svg>
+          </div>
+        </div>
+        
+        <div class="mb-4">
+          <p class="text-4xl font-bold text-black dark:text-white">
+            {{ formatNumber(renalFunction.urineOutputRatio, 2) }}
+            <span class="text-lg font-normal text-gray-500">mL/kg/hr</span>
+          </p>
+        </div>
+        
+        <span [class]="getUrineOutputStatusClass()" class="inline-flex w-full justify-center rounded-full px-3 py-1.5 text-sm font-medium">
+          {{ getUrineOutputStatus() }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Calculation Details Card -->
+    <div class="mb-6 rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+      <div class="border-b border-stroke px-6 py-4 dark:border-strokedark">
+        <h3 class="font-medium text-black dark:text-white">Calculation Details</h3>
+      </div>
+      
+      <div class="p-6">
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          
+          <div>
+            <p class="mb-2 text-sm font-medium text-gray-500 dark:text-gray-400">Formula Used</p>
+            <p class="text-lg font-semibold text-black dark:text-white">
+              {{ renalFunction.gfrFormula || 'N/A' }}
+            </p>
+          </div>
+          
+          <div>
+            <p class="mb-2 text-sm font-medium text-gray-500 dark:text-gray-400">Coefficient K</p>
+            <p class="text-lg font-semibold text-black dark:text-white">
+              {{ formatNumber(renalFunction.coefficientK, 3) }}
+            </p>
+          </div>
+          
+          <div>
+            <p class="mb-2 text-sm font-medium text-gray-500 dark:text-gray-400">Calculation Date</p>
+            <p class="text-lg font-semibold text-black dark:text-white">
+              {{ formatDate(renalFunction.calculationDate) }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Formula Info Box -->
+        <div class="mt-6 rounded-lg bg-blue-50 p-4 dark:bg-blue-900/20">
+          <div class="flex items-start gap-3">
+            <svg class="h-5 w-5 flex-shrink-0 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <div class="flex-1">
+              <p class="text-sm font-medium text-blue-800 dark:text-blue-300">About GFR Calculation</p>
+              <p class="mt-1 text-xs text-blue-700 dark:text-blue-400">
+                GFR is calculated using the {{ renalFunction.gfrFormula || 'Schwartz' }} formula, which estimates kidney function based on creatinine level, height, and age. The coefficient K varies based on patient demographics and is automatically determined by the system.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Additional Measurements Card -->
+    <div class="mb-6 rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+      <div class="border-b border-stroke px-6 py-4 dark:border-strokedark">
+        <h3 class="font-medium text-black dark:text-white">Additional Measurements</h3>
+      </div>
+      
+      <div class="p-6">
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          
+          <div class="rounded-lg border border-stroke p-4 dark:border-strokedark">
+            <p class="mb-2 text-sm font-medium text-gray-500 dark:text-gray-400">Creatinine Clearance</p>
+            <p class="text-2xl font-bold text-black dark:text-white">
+              {{ formatNumber(renalFunction.creatinineClearance, 1) }}
+              <span class="text-sm font-normal text-gray-500">mL/min</span>
+            </p>
+            <p class="mt-2 text-xs text-gray-600 dark:text-gray-400">
+              Measures kidney's ability to clear creatinine from blood
+            </p>
+          </div>
+
+          <div class="rounded-lg border border-stroke p-4 dark:border-strokedark">
+            <p class="mb-2 text-sm font-medium text-gray-500 dark:text-gray-400">Vital Sign ID</p>
+            <div class="flex items-center gap-3">
+              <p class="text-2xl font-bold text-black dark:text-white">
+                #{{ renalFunction.vitalSignId || 'N/A' }}
+              </p>
+              <button *ngIf="renalFunction.vitalSignId" [routerLink]="['/vital-signs', renalFunction.vitalSignId]" class="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary hover:bg-primary/20">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M10.4767 6.16664L6.00668 1.69664L7.18501 0.518311L13.6667 6.99998L7.18501 13.4816L6.00668 12.3033L10.4767 7.83331H0.333344V6.16664H10.4767Z" fill="currentColor"/>
+                </svg>
+                View
+              </button>
+            </div>
+            <p class="mt-2 text-xs text-gray-600 dark:text-gray-400">
+              Source vital sign measurement
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reference Ranges Card -->
+    <div class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+      <div class="border-b border-stroke px-6 py-4 dark:border-strokedark">
+        <h3 class="font-medium text-black dark:text-white">Reference Ranges & Interpretation</h3>
+      </div>
+      
+      <div class="p-6">
+        <div class="space-y-4">
+          
+          <!-- GFR Stages -->
+          <div>
+            <h4 class="mb-3 text-sm font-semibold text-black dark:text-white">GFR Stages (CKD Classification)</h4>
+            <div class="space-y-2">
+              <div class="flex items-center justify-between rounded-lg bg-green-50 p-3 dark:bg-green-900/20">
+                <span class="text-sm text-green-900 dark:text-green-300">Stage 1 - Normal or High</span>
+                <span class="font-semibold text-green-900 dark:text-green-300">≥ 90</span>
+              </div>
+              <div class="flex items-center justify-between rounded-lg bg-blue-50 p-3 dark:bg-blue-900/20">
+                <span class="text-sm text-blue-900 dark:text-blue-300">Stage 2 - Mildly Decreased</span>
+                <span class="font-semibold text-blue-900 dark:text-blue-300">60-89</span>
+              </div>
+              <div class="flex items-center justify-between rounded-lg bg-yellow-50 p-3 dark:bg-yellow-900/20">
+                <span class="text-sm text-yellow-900 dark:text-yellow-300">Stage 3a - Mild to Moderate</span>
+                <span class="font-semibold text-yellow-900 dark:text-yellow-300">45-59</span>
+              </div>
+              <div class="flex items-center justify-between rounded-lg bg-orange-50 p-3 dark:bg-orange-900/20">
+                <span class="text-sm text-orange-900 dark:text-orange-300">Stage 3b - Moderate to Severe</span>
+                <span class="font-semibold text-orange-900 dark:text-orange-300">30-44</span>
+              </div>
+              <div class="flex items-center justify-between rounded-lg bg-red-50 p-3 dark:bg-red-900/20">
+                <span class="text-sm text-red-900 dark:text-red-300">Stage 4 - Severely Decreased</span>
+                <span class="font-semibold text-red-900 dark:text-red-300">15-29</span>
+              </div>
+              <div class="flex items-center justify-between rounded-lg bg-purple-50 p-3 dark:bg-purple-900/20">
+                <span class="text-sm text-purple-900 dark:text-purple-300">Stage 5 - Kidney Failure</span>
+                <span class="font-semibold text-purple-900 dark:text-purple-300">&lt; 15</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pediatric Notes -->
+          <div class="rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
+            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
+              📌 Pediatric Considerations
+            </p>
+            <ul class="mt-2 space-y-1 text-xs text-gray-700 dark:text-gray-300">
+              <li>• Normal GFR varies with age and body size in children</li>
+              <li>• Creatinine levels are lower in children than adults</li>
+              <li>• Schwartz formula is commonly used for pediatric GFR estimation</li>
+              <li>• Regular monitoring is essential for chronic kidney disease</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>

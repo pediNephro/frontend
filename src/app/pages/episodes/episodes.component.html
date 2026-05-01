@@ -1,0 +1,387 @@
+<!-- MODALE SUPPRESSION -->
+<div *ngIf="showDeleteModal"
+     class="fixed inset-0 z-50 flex items-center justify-center"
+     style="background-color: rgba(0,0,0,0.25)">
+  <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md mx-4">
+    <div class="flex justify-center mb-4">
+      <div class="bg-red-100 rounded-full p-4">
+        <svg class="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+        </svg>
+      </div>
+    </div>
+    <h3 class="text-xl font-bold text-center mb-2">Confirmer la suppression</h3>
+    <p class="text-gray-500 text-center mb-6">
+      Supprimer l'épisode <strong>#{{ deletingId }}</strong> ?
+      <br><span class="text-sm text-red-500">Cette action est irréversible.</span>
+    </p>
+    <div class="flex gap-3">
+      <button (click)="cancelDelete()"
+              class="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl hover:bg-gray-50">
+        Annuler
+      </button>
+      <button (click)="confirmDelete()"
+              class="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700">
+        Supprimer
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="p-6">
+
+  <!-- HEADER -->
+  <div class="mb-6">
+    <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-1">Épisodes de Soin</h1>
+    <p class="text-gray-500">Suivi des actes médicaux · File d'attente · Timeline parcours</p>
+  </div>
+
+  <!-- TABS -->
+  <nav class="flex gap-2 mb-6 border-b flex-wrap">
+    <button (click)="switchTab('list')" class="py-3 px-4 border-b-2 font-medium transition-colors"
+      [class.border-blue-500]="activeTab === 'list'" [class.text-blue-600]="activeTab === 'list'"
+      [class.border-transparent]="activeTab !== 'list'" [class.text-gray-500]="activeTab !== 'list'">
+      📋 Liste ({{ episodes.length }})
+    </button>
+    <button (click)="switchTab('add')" class="py-3 px-4 border-b-2 font-medium transition-colors"
+      [class.border-blue-500]="activeTab === 'add'" [class.text-blue-600]="activeTab === 'add'"
+      [class.border-transparent]="activeTab !== 'add'" [class.text-gray-500]="activeTab !== 'add'">
+      ➕ Nouvel Épisode
+    </button>
+    <button (click)="switchTab('fileattente')" class="py-3 px-4 border-b-2 font-medium transition-colors"
+      [class.border-orange-500]="activeTab === 'fileattente'" [class.text-orange-600]="activeTab === 'fileattente'"
+      [class.border-transparent]="activeTab !== 'fileattente'" [class.text-gray-500]="activeTab !== 'fileattente'">
+      🧠 File d'Attente
+    </button>
+    <button (click)="switchTab('timeline')" class="py-3 px-4 border-b-2 font-medium transition-colors"
+      [class.border-purple-500]="activeTab === 'timeline'" [class.text-purple-600]="activeTab === 'timeline'"
+      [class.border-transparent]="activeTab !== 'timeline'" [class.text-gray-500]="activeTab !== 'timeline'">
+      🧠 Timeline Parcours
+    </button>
+  </nav>
+
+  <!-- ================================================= -->
+  <!-- LIST                                              -->
+  <!-- ================================================= -->
+  <div *ngIf="activeTab === 'list'">
+    <div *ngIf="loading" class="text-center py-6 text-blue-600 font-semibold">Chargement...</div>
+    <div *ngIf="!loading" class="bg-white rounded-lg shadow overflow-hidden">
+      <table class="w-full text-left">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-4 text-sm font-semibold text-gray-600">ID</th>
+            <th class="px-6 py-4 text-sm font-semibold text-gray-600">Type</th>
+            <th class="px-6 py-4 text-sm font-semibold text-gray-600">Date</th>
+            <th class="px-6 py-4 text-sm font-semibold text-gray-600">Description</th>
+            <th class="px-6 py-4 text-sm font-semibold text-gray-600">Hospitalisation</th>
+            <th class="px-6 py-4 text-sm font-semibold text-gray-600">Patient</th>
+            <th class="px-6 py-4 text-sm font-semibold text-gray-600">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+          <tr *ngIf="episodes.length === 0">
+            <td colspan="7" class="text-center py-10 text-gray-500">Aucun épisode enregistré.</td>
+          </tr>
+          <tr *ngFor="let e of episodes" class="hover:bg-gray-50 transition-colors">
+            <td class="px-6 py-4 text-sm font-mono text-gray-500">#{{ e.id }}</td>
+            <td class="px-6 py-4">
+              <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">
+                {{ e.type }}
+              </span>
+            </td>
+            <td class="px-6 py-4 text-sm">{{ e.date | date:'dd/MM/yyyy' }}</td>
+            <td class="px-6 py-4 text-sm text-gray-600">{{ e.description }}</td>
+            <td class="px-6 py-4 text-sm">
+              #{{ e.hospitalisationId }}
+              <span class="text-xs text-gray-400 ml-1">{{ e.service }}</span>
+            </td>
+            <td class="px-6 py-4 text-sm">
+              {{ e.nomPatient ? e.nomPatient + ' ' + e.prenomPatient : '—' }}
+            </td>
+            <td class="px-6 py-4">
+              <div class="flex gap-3">
+                <button (click)="editEpisode(e)" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                  ✏️ Modifier
+                </button>
+                <button (click)="deleteEpisode(e.id!)" class="text-red-600 hover:text-red-800 text-sm font-medium">
+                  🗑️ Supprimer
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ================================================= -->
+  <!-- FORMULAIRE ADD / EDIT                             -->
+  <!-- ================================================= -->
+  <div *ngIf="activeTab === 'add'" class="bg-white rounded-lg shadow p-6">
+    <h2 class="text-xl font-semibold mb-2">
+      {{ isEditMode ? '✏️ Modifier Épisode #' + editingId : '➕ Nouvel Épisode de Soin' }}
+    </h2>
+
+    <div *ngIf="isEditMode" class="mb-4 bg-yellow-50 border border-yellow-300 text-yellow-800 px-4 py-2 rounded-lg text-sm">
+      ⚠️ Vous modifiez l'épisode <strong>#{{ editingId }}</strong>.
+    </div>
+
+    <div *ngIf="formError" class="mb-4 bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg">
+      ❌ {{ formError }}
+    </div>
+
+    <form (ngSubmit)="saveEpisode()" class="space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        <div>
+          <label class="block mb-2 font-medium text-sm text-gray-700">Type *</label>
+          <select [(ngModel)]="newEpisode.type" name="type" required
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500">
+            <option value="">— Sélectionner un type —</option>
+            <option value="Consultation">Consultation</option>
+            <option value="Analyse">Analyse</option>
+            <option value="Chirurgie">Chirurgie</option>
+            <option value="Radiologie">Radiologie</option>
+            <option value="Urgence">Urgence</option>
+            <option value="Kinesitherapie">Kinésithérapie</option>
+            <option value="Dialyse">Dialyse</option>
+            <option value="Suivi">Suivi</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block mb-2 font-medium text-sm text-gray-700">Date *</label>
+          <input type="date" [(ngModel)]="newEpisode.date" name="date" required
+                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <div class="md:col-span-2">
+          <label class="block mb-2 font-medium text-sm text-gray-700">Description *</label>
+          <input type="text" [(ngModel)]="newEpisode.description" name="description" required
+                 placeholder="Décrivez l'épisode..."
+                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <div class="md:col-span-2">
+          <label class="block mb-2 font-medium text-sm text-gray-700">Hospitalisation associée *</label>
+          <select [(ngModel)]="newEpisode.hospitalisationId" name="hospitalisationId" required
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500">
+            <option [value]="0">— Sélectionner —</option>
+            <option *ngFor="let h of hospitalisations" [value]="h.id">
+              #{{ h.id }} — {{ h.service }} ({{ h.nomPatient || '?' }}) — {{ (h.dateEntree || h.dateAdmission) | date:'dd/MM/yyyy' }}
+            </option>
+          </select>
+        </div>
+
+      </div>
+
+      <div class="flex justify-end gap-4 pt-6 border-t">
+        <button type="button" (click)="cancelEdit()"
+                class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-gray-700">
+          Annuler
+        </button>
+        <button type="submit" class="px-6 py-2 text-white rounded-lg font-medium"
+                [ngClass]="isEditMode ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-blue-600 hover:bg-blue-700'">
+          {{ isEditMode ? '💾 Mettre à jour' : '✅ Enregistrer' }}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ================================================= -->
+  <!-- FILE D'ATTENTE DIGITALE                           -->
+  <!-- ================================================= -->
+  <div *ngIf="activeTab === 'fileattente'" class="bg-white rounded-lg shadow p-6">
+    <h2 class="text-xl font-semibold mb-1">🧠 File d'Attente Digitale</h2>
+    <p class="text-gray-500 text-sm mb-6">Patients triés par priorité médicale avec temps d'attente estimé</p>
+
+    <div class="flex gap-3 items-center mb-6 flex-wrap">
+      <label class="font-medium text-sm">Service :</label>
+      <select [(ngModel)]="selectedServiceFile"
+              class="px-3 py-2 border border-gray-300 rounded-lg bg-white">
+        <option value="Nephrologie">Néphrologie</option>
+        <option value="Cardiologie">Cardiologie</option>
+        <option value="Neurologie">Neurologie</option>
+        <option value="Pediatrie">Pédiatrie</option>
+        <option value="Oncologie">Oncologie</option>
+        <option value="Chirurgie">Chirurgie</option>
+        <option value="Urgences">Urgences</option>
+        <option value="Reanimation">Réanimation</option>
+      </select>
+      <button (click)="loadFileAttente()"
+              class="px-5 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 font-medium text-sm">
+        Charger la file
+      </button>
+    </div>
+
+    <div *ngIf="fileAttenteLoading" class="text-center py-6 text-orange-500 font-semibold">
+      Calcul en cours...
+    </div>
+
+    <div *ngIf="fileAttente && !fileAttenteLoading">
+      <!-- Résumé -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div class="bg-orange-50 border border-orange-200 rounded-lg p-4 text-center">
+          <p class="text-sm text-gray-500">Patients en attente</p>
+          <p class="text-3xl font-bold text-orange-600">{{ fileAttente.nombrePatientsEnAttente }}</p>
+        </div>
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+          <p class="text-sm text-gray-500">Temps total estimé</p>
+          <p class="text-3xl font-bold text-blue-600">{{ fileAttente.tempsAttenteTotal }} min</p>
+        </div>
+        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
+          <p class="text-sm text-gray-500">Service</p>
+          <p class="text-xl font-bold text-gray-700">{{ fileAttente.service }}</p>
+        </div>
+      </div>
+
+      <!-- Table file -->
+      <div *ngIf="fileAttente.file && fileAttente.file.length > 0">
+        <h3 class="font-semibold mb-3 text-sm text-gray-700">Ordre de passage</h3>
+        <div class="space-y-3">
+          <div *ngFor="let item of fileAttente.file"
+               class="flex items-center gap-4 p-4 rounded-xl border"
+               [ngClass]="getPrioriteClass(item.niveauPriorite)">
+            <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg flex-shrink-0"
+                 [class.bg-red-200]="item.niveauPriorite === 'CRITIQUE'"
+                 [class.bg-yellow-200]="item.niveauPriorite === 'NORMAL'"
+                 [class.bg-green-200]="item.niveauPriorite === 'FAIBLE'">
+              {{ item.position }}
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="font-semibold text-sm">{{ item.type }}</span>
+                <span class="text-xs px-2 py-0.5 rounded-full font-medium"
+                      [class.bg-red-200]="item.niveauPriorite === 'CRITIQUE'"
+                      [class.bg-yellow-200]="item.niveauPriorite === 'NORMAL'"
+                      [class.bg-blue-200]="item.niveauPriorite === 'FAIBLE'">
+                  {{ item.niveauPriorite }}
+                </span>
+              </div>
+              <p class="text-sm text-gray-600">{{ item.description }}</p>
+            </div>
+            <div class="text-right flex-shrink-0">
+              <p class="font-bold text-lg">{{ item.heurePassageEstimee }}</p>
+              <p class="text-xs text-gray-500">Attente : {{ item.tempsAttenteMinutes }} min</p>
+              <p class="text-xs text-gray-400">Durée : {{ item.dureeEstimeeMinutes }} min</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="!fileAttente.file || fileAttente.file.length === 0"
+           class="text-center py-8 text-gray-500">
+        Aucun patient en attente pour ce service.
+      </div>
+    </div>
+
+    <div *ngIf="!fileAttente && !fileAttenteLoading" class="text-center py-8 text-gray-400">
+      Sélectionnez un service et cliquez sur "Charger la file".
+    </div>
+  </div>
+
+  <!-- ================================================= -->
+  <!-- TIMELINE PARCOURS DE SOINS                        -->
+  <!-- ================================================= -->
+  <div *ngIf="activeTab === 'timeline'" class="bg-white rounded-lg shadow p-6">
+    <h2 class="text-xl font-semibold mb-1">🧠 Timeline Parcours de Soins</h2>
+    <p class="text-gray-500 text-sm mb-6">Historique chronologique de tous les actes médicaux d'un patient</p>
+
+    <div class="flex gap-3 items-center mb-6 flex-wrap">
+      <label class="font-medium text-sm">Patient :</label>
+      <select [(ngModel)]="selectedPatientTimeline"
+              class="px-3 py-2 border border-gray-300 rounded-lg bg-white w-64">
+        <option [value]="0">— Sélectionner un patient —</option>
+        <option *ngFor="let p of patients" [value]="p.id">
+          {{ p.nom }} {{ p.prenom }}
+        </option>
+      </select>
+      <button (click)="loadTimeline()"
+              class="px-5 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium text-sm">
+        Afficher
+      </button>
+    </div>
+
+    <div *ngIf="timelineError"
+         class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+      {{ timelineError }}
+    </div>
+
+    <div *ngIf="timelineLoading" class="text-center py-6 text-purple-600 font-semibold">
+      Chargement timeline...
+    </div>
+
+    <div *ngIf="timeline && !timelineLoading">
+      <!-- Stats -->
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+        <div class="bg-purple-50 border border-purple-200 rounded-lg p-4 text-center">
+          <p class="text-sm text-gray-500">Total épisodes</p>
+          <p class="text-3xl font-bold text-purple-700">{{ timeline.totalEpisodes }}</p>
+        </div>
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+          <p class="text-sm text-gray-500">Patient ID</p>
+          <p class="text-3xl font-bold text-blue-600">#{{ timeline.patientId }}</p>
+        </div>
+        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
+          <p class="text-sm text-gray-500">Types différents</p>
+          <p class="text-3xl font-bold text-gray-700">
+            {{ objectKeys(timeline.frequenceTypes || {}).length }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Fréquence par type -->
+      <div class="mb-8" *ngIf="timeline.frequenceTypes">
+        <h3 class="font-semibold mb-3 text-sm">Répartition des actes</h3>
+        <div class="flex flex-wrap gap-2">
+          <span *ngFor="let key of objectKeys(timeline.frequenceTypes)"
+                class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+            {{ key }} × {{ timeline.frequenceTypes[key] }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Timeline visuelle -->
+      <div *ngIf="timeline.timeline && timeline.timeline.length > 0">
+        <h3 class="font-semibold mb-4 text-sm">Chronologie</h3>
+        <div class="relative">
+          <div class="absolute left-5 top-0 bottom-0 w-0.5 bg-gray-200"></div>
+          <div *ngFor="let jalon of timeline.timeline" class="relative flex gap-4 mb-6 pl-14">
+            <div class="absolute left-3 w-5 h-5 rounded-full border-2 border-white shadow"
+                 [ngClass]="getTimelineColor(jalon.type)">
+            </div>
+            <div class="flex-1 bg-gray-50 border rounded-xl p-4">
+              <div class="flex items-start justify-between mb-1 flex-wrap gap-2">
+                <span class="font-semibold text-gray-800">{{ jalon.type }}</span>
+                <span class="text-sm text-gray-500 font-medium">
+                  {{ jalon.date | date:'dd/MM/yyyy' }}
+                </span>
+              </div>
+              <p class="text-sm text-gray-600 mb-2">{{ jalon.description }}</p>
+              <div class="flex gap-4 text-xs text-gray-400 flex-wrap">
+                <span *ngIf="jalon.joursDepuisEpisodePrecedent > 0">
+                  ⏱ +{{ jalon.joursDepuisEpisodePrecedent }} j depuis le précédent
+                </span>
+                <span *ngIf="jalon.premierEpisode" class="text-purple-600 font-semibold">
+                  ★ Premier épisode
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="!timeline.timeline || timeline.timeline.length === 0"
+           class="text-center py-8 text-gray-500">
+        Aucun épisode trouvé pour ce patient.
+      </div>
+    </div>
+
+    <div *ngIf="!timeline && !timelineLoading && !timelineError"
+         class="text-center py-8 text-gray-400">
+      Sélectionnez un patient et cliquez sur "Afficher".
+    </div>
+  </div>
+
+</div>

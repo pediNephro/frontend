@@ -1,0 +1,101 @@
+<div class="max-w-3xl mx-auto p-6 bg-white rounded-xl shadow">
+
+  <h2 class="text-xl font-semibold mb-6">
+    {{ isEditMode ? 'Edit Report Schedule' : 'Create Report Schedule' }}
+  </h2>
+
+  <form [formGroup]="scheduleForm" (ngSubmit)="onSubmit()" class="space-y-4">
+
+    <div>
+      <label class="block mb-1 text-gray-700 dark:text-gray-300">Schedule Name</label>
+      <input type="text"
+             formControlName="scheduleName"
+             class="w-full border rounded p-2"
+             placeholder="Enter schedule name" />
+      <small class="text-red-500"
+             *ngIf="scheduleForm.get('scheduleName')?.touched && scheduleForm.get('scheduleName')?.invalid">
+        Schedule name is required.
+      </small>
+    </div>
+
+    <div>
+      <label class="block mb-1 text-gray-700 dark:text-gray-300">Schedule Type</label>
+      <select formControlName="scheduleType" class="w-full border rounded p-2">
+        <option value="DAILY">Daily</option>
+        <option value="WEEKLY">Weekly</option>
+        <option value="MONTHLY">Monthly</option>
+      </select>
+    </div>
+
+    <div>
+      <label class="block mb-1 text-gray-700 dark:text-gray-300">Next Execution Date</label>
+      <input type="datetime-local"
+             formControlName="nextExecutionDate"
+             class="w-full border rounded p-2" />
+      <small class="text-red-500"
+             *ngIf="scheduleForm.get('nextExecutionDate')?.touched && scheduleForm.get('nextExecutionDate')?.invalid">
+        Date is required.
+      </small>
+    </div>
+
+    <div>
+      <label class="block mb-1 text-gray-700 dark:text-gray-300">Template</label>
+      <select formControlName="templateId" class="w-full border rounded p-2">
+        <option value="">Select template</option>
+        <option *ngFor="let template of templates" [value]="template.id">
+          {{ template.templateName }}
+        </option>
+      </select>
+      <small class="text-red-500"
+             *ngIf="scheduleForm.get('templateId')?.touched && scheduleForm.get('templateId')?.invalid">
+        Template is required.
+      </small>
+    </div>
+
+    <div>
+      <label class="block mb-1 text-gray-700 dark:text-gray-300">Patient</label>
+      <select formControlName="userId" class="w-full border rounded p-2">
+        <option value="">Select patient</option>
+        <option *ngFor="let patient of patients" [value]="patient.id">
+          {{ patient.firstName }} {{ patient.lastName }}
+        </option>
+      </select>
+      <small class="text-red-500"
+             *ngIf="scheduleForm.get('userId')?.touched && scheduleForm.get('userId')?.invalid">
+        Patient is required.
+      </small>
+    </div>
+
+    <div>
+      <label class="block mb-1 text-gray-700 dark:text-gray-300">Doctor</label>
+      <select formControlName="doctorId" class="w-full border rounded p-2">
+        <option value="">Select doctor</option>
+        <option *ngFor="let doctor of doctors" [value]="doctor.id">
+          Dr. {{ doctor.firstName }} {{ doctor.lastName }}
+        </option>
+      </select>
+      <small class="text-red-500"
+             *ngIf="scheduleForm.get('doctorId')?.touched && scheduleForm.get('doctorId')?.invalid">
+        Doctor is required.
+      </small>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <input type="checkbox" formControlName="active" />
+      <label class="text-gray-700 dark:text-gray-300">Active</label>
+    </div>
+
+    <div class="flex gap-3">
+      <button type="submit"
+              class="bg-brand-500 hover:bg-brand-600 text-white px-4 py-2 rounded-xl shadow">
+        {{ isEditMode ? 'Update Schedule' : 'Create Schedule' }}
+      </button>
+      <a routerLink="/schedules"
+         class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-xl shadow">
+        Cancel
+      </a>
+    </div>
+
+  </form>
+
+</div>

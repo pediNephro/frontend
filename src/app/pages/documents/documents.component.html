@@ -1,0 +1,420 @@
+<!-- ================= MODAL SUPPRESSION ================= -->
+<div *ngIf="showDeleteModal"
+     class="fixed inset-0 z-50 flex items-center justify-center"
+     style="background-color: rgba(0,0,0,0.25)">
+  <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md mx-4">
+    <div class="flex justify-center mb-4">
+      <div class="bg-red-100 rounded-full p-4">
+        <svg class="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+        </svg>
+      </div>
+    </div>
+    <h3 class="text-xl font-bold text-gray-900 text-center mb-2">Confirmer la suppression</h3>
+    <p class="text-gray-500 text-center mb-6">
+      Supprimer le document <strong>#{{ deletingId }}</strong> ?<br>
+      <span class="text-sm text-red-500">Cette action est irréversible.</span>
+    </p>
+    <div class="flex gap-3">
+      <button (click)="cancelDelete()"
+              class="flex-1 px-4 py-3 border-2 border-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-50">
+        Annuler
+      </button>
+      <button (click)="confirmDelete()"
+              class="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700">
+        Supprimer
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="p-6">
+
+  <!-- HEADER -->
+  <div class="mb-6">
+    <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">📄 Documents Médicaux</h1>
+    <p class="text-gray-500 dark:text-gray-400">Gestion des documents médicaux des patients</p>
+  </div>
+
+  <!-- TABS -->
+  <nav class="flex gap-1 mb-6 border-b pb-0 flex-wrap">
+    <button (click)="switchTab('list')" class="py-2 px-4 border-b-2 font-medium text-sm transition-colors"
+      [class.border-blue-500]="activeTab==='list'" [class.text-blue-600]="activeTab==='list'"
+      [class.border-transparent]="activeTab!=='list'" [class.text-gray-500]="activeTab!=='list'">
+      📋 Liste ({{ documents.length }})
+    </button>
+    <button (click)="switchTab('add')" class="py-2 px-4 border-b-2 font-medium text-sm transition-colors"
+      [class.border-blue-500]="activeTab==='add'" [class.text-blue-600]="activeTab==='add'"
+      [class.border-transparent]="activeTab!=='add'" [class.text-gray-500]="activeTab!=='add'">
+      ➕ {{ isEditMode ? 'Modifier Document' : 'Nouveau Document' }}
+    </button>
+  </nav>
+
+  <!-- LOADING / ERROR -->
+  <div *ngIf="loading" class="text-center py-4 text-blue-600 font-semibold animate-pulse">
+    ⏳ Chargement...
+  </div>
+  <div *ngIf="errorMessage"
+       class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+    ❌ {{ errorMessage }}
+  </div>
+
+  <!-- ================================================= -->
+  <!-- LISTE -->
+  <!-- ================================================= -->
+  <div *ngIf="activeTab === 'list' && !loading">
+
+    <!-- 🔥 RISQUE RÉNAL IA -->
+    <div *ngIf="riskLevel"
+         class="flex items-center gap-3 px-4 py-3 rounded-lg mb-3 font-medium text-sm"
+         [ngClass]="{
+           'bg-red-100 text-red-800 border border-red-300': riskLevel === 'CRITIQUE',
+           'bg-yellow-100 text-yellow-800 border border-yellow-300': riskLevel === 'MODERE',
+           'bg-green-100 text-green-800 border border-green-300': riskLevel === 'FAIBLE'
+         }">
+      <span>{{ riskLevel === 'CRITIQUE' ? '🔴' : riskLevel === 'MODERE' ? '🟡' : '🟢' }}</span>
+      Risque rénal : <strong>{{ riskLevel }}</strong>
+    </div>
+
+    <!-- Filtres -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-4">
+      <div class="flex gap-3 flex-wrap items-end">
+
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Patient</label>
+          <select [(ngModel)]="filterPatientId"
+                  (change)="onPatientChange()"
+                  class="px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm">
+            <option [value]="0">Tous les patients</option>
+            <option *ngFor="let p of patients" [value]="p.id">{{ p.nom }} {{ p.prenom }}</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Type</label>
+          <select [(ngModel)]="filterType"
+                  class="px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm">
+            <option value="">Tous les types</option>
+            <option *ngFor="let t of typesDocument" [value]="t">{{ t }}</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Recherche OCR</label>
+          <input [(ngModel)]="searchQuery"
+                 placeholder="🔍 Rechercher dans texte OCR..."
+                 class="px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm w-56">
+        </div>
+
+        <button (click)="appliquerFiltres()"
+                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium">
+          🔍 Filtrer
+        </button>
+
+        <button (click)="searchOCR()"
+                class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium">
+          🔎 OCR
+        </button>
+
+        <button (click)="resetFiltres()"
+                class="px-4 py-2 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 text-sm">
+          Réinitialiser
+        </button>
+
+        <button (click)="verifierCompletude()"
+                [disabled]="filterPatientId === 0 || completudeLoading"
+                class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm font-medium disabled:opacity-50">
+          <span *ngIf="!completudeLoading">📋 Vérifier complétude</span>
+          <span *ngIf="completudeLoading">⏳ Analyse...</span>
+        </button>
+
+        <button (click)="exporterPdf()"
+                [disabled]="filterPatientId === 0"
+                class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium disabled:opacity-50">
+          📥 Exporter PDF
+        </button>
+
+      </div>
+    </div>
+
+    <!-- RÉSULTAT COMPLÉTUDE -->
+    <div *ngIf="completudeResult"
+         class="mb-4 rounded-xl p-5 border-2 shadow-sm"
+         [ngClass]="completudeResult.complet
+           ? 'bg-green-50 border-green-300'
+           : completudeResult.pourcentage >= 50
+             ? 'bg-yellow-50 border-yellow-300'
+             : 'bg-red-50 border-red-300'">
+
+      <div class="flex items-center gap-3 mb-3">
+        <span class="text-2xl">
+          {{ completudeResult.complet ? '✅' : completudeResult.pourcentage >= 50 ? '⚠️' : '❌' }}
+        </span>
+        <div class="flex-1">
+          <div class="flex items-center justify-between mb-1">
+            <span class="font-bold text-lg"
+                  [ngClass]="completudeResult.complet ? 'text-green-800'
+                    : completudeResult.pourcentage >= 50 ? 'text-yellow-800' : 'text-red-800'">
+              Complétude dossier — {{ completudeResult.pourcentage }}%
+              <span class="ml-2 text-sm font-normal">({{ completudeResult.score }})</span>
+            </span>
+            <span class="text-sm text-gray-500">
+              {{ completudeResult.presents.length }} / {{ completudeResult.typesRequis.length }} types
+            </span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-3">
+            <div class="h-3 rounded-full transition-all duration-500"
+                 [style.width]="completudeResult.pourcentage + '%'"
+                 [ngClass]="completudeResult.complet ? 'bg-green-500'
+                   : completudeResult.pourcentage >= 50 ? 'bg-yellow-500' : 'bg-red-500'">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="completudeResult.presents.length > 0" class="mb-2">
+        <span class="text-sm font-medium text-green-700">✅ Présents : </span>
+        <span *ngFor="let p of completudeResult.presents; let last = last" class="text-sm text-green-700">
+          {{ p }}<span *ngIf="!last">, </span>
+        </span>
+      </div>
+
+      <div *ngIf="completudeResult.manquants.length > 0">
+        <span class="text-sm font-medium text-red-700">❌ Manquants : </span>
+        <span *ngFor="let m of completudeResult.manquants; let last = last" class="text-sm text-red-700">
+          {{ m }}<span *ngIf="!last">, </span>
+        </span>
+      </div>
+
+      <div *ngIf="completudeResult.complet" class="text-sm text-green-700 font-medium mt-1">
+        🎉 Dossier complet ! Tous les documents requis sont présents.
+      </div>
+
+      <div class="text-xs text-gray-500 mt-2">Total documents : {{ completudeResult.totalDocuments }}</div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+      <table class="w-full text-left">
+        <thead class="bg-gray-50 dark:bg-gray-700">
+          <tr>
+            <th class="px-6 py-4 text-sm font-semibold text-gray-600">ID</th>
+            <th class="px-6 py-4 text-sm font-semibold text-gray-600">Patient</th>
+            <th class="px-6 py-4 text-sm font-semibold text-gray-600">Nom Fichier</th>
+            <th class="px-6 py-4 text-sm font-semibold text-gray-600">Type / Confiance</th>
+            <th class="px-6 py-4 text-sm font-semibold text-gray-600">Catégorie</th>
+            <th class="px-6 py-4 text-sm font-semibold text-gray-600">Date Upload</th>
+            <th class="px-6 py-4 text-sm font-semibold text-gray-600">OCR</th>
+            <th class="px-6 py-4 text-sm font-semibold text-gray-600">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+          <tr *ngIf="documents.length === 0">
+            <td colspan="8" class="text-center py-10 text-gray-500">
+              Aucun document médical enregistré.
+            </td>
+          </tr>
+          <tr *ngFor="let doc of documents" class="hover:bg-gray-50 transition-colors">
+            <td class="px-6 py-4 text-sm font-mono text-gray-500">#{{ doc.id }}</td>
+            <td class="px-6 py-4 font-medium">{{ getPatientName(doc.patientId) }}</td>
+            <td class="px-6 py-4 text-sm">{{ doc.nomFichier }}</td>
+            <td class="px-6 py-4">
+              <div class="flex flex-col gap-1">
+                <span class="px-2 py-1 bg-purple-50 text-purple-700 rounded text-sm font-medium w-fit">
+                  {{ doc.type }}
+                </span>
+                <span *ngIf="doc.niveauConfiance"
+                      class="px-2 py-0.5 rounded text-xs font-medium w-fit"
+                      [ngClass]="getConfianceBadgeClass(doc.niveauConfiance)"
+                      [title]="'Score de confiance : ' + doc.scoreConfiance + '/100'">
+                  {{ getConfianceLabel(doc.niveauConfiance) }} — {{ doc.scoreConfiance }}%
+                </span>
+              </div>
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-600">{{ doc.categorie || '—' }}</td>
+            <td class="px-6 py-4 text-sm">{{ doc.dateUpload | date:'dd/MM/yyyy' }}</td>
+            <td class="px-6 py-4 text-sm">
+              <span *ngIf="doc.contenuOcr"
+                    class="px-2 py-1 bg-green-50 text-green-700 rounded text-xs font-medium"
+                    [title]="doc.contenuOcr">
+                ✅ OCR
+              </span>
+              <span *ngIf="!doc.contenuOcr" class="text-gray-400 text-xs">—</span>
+            </td>
+            <td class="px-6 py-4">
+              <div class="flex gap-3">
+                <button (click)="editDocument(doc)"
+                        class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                  ✏️ Modifier
+                </button>
+                <button (click)="openDeleteModal(doc.id!)"
+                        class="text-red-600 hover:text-red-800 text-sm font-medium">
+                  🗑️ Supprimer
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div *ngIf="totalPages > 1" class="flex justify-center gap-3 mt-4">
+      <button (click)="prevPage()" [disabled]="page === 0"
+              class="px-4 py-2 border rounded-lg text-sm disabled:opacity-40 hover:bg-gray-50">
+        ← Précédent
+      </button>
+      <span class="px-4 py-2 text-sm text-gray-600">Page {{ page + 1 }} / {{ totalPages }}</span>
+      <button (click)="nextPage()" [disabled]="page >= totalPages - 1"
+              class="px-4 py-2 border rounded-lg text-sm disabled:opacity-40 hover:bg-gray-50">
+        Suivant →
+      </button>
+    </div>
+
+  </div>
+
+  <!-- ================================================= -->
+  <!-- FORMULAIRE ADD/EDIT -->
+  <!-- ================================================= -->
+  <div *ngIf="activeTab === 'add'" class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+    <h2 class="text-xl font-semibold mb-4">
+      {{ isEditMode ? '✏️ Modifier Document #' + editingId : '➕ Nouveau Document Médical' }}
+    </h2>
+
+    <div *ngIf="isEditMode"
+         class="mb-4 bg-yellow-50 border border-yellow-300 text-yellow-800 px-4 py-2 rounded-lg text-sm">
+      ⚠️ Modification du document <strong>#{{ editingId }}</strong>
+    </div>
+
+    <div *ngIf="formError"
+         class="mb-4 bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg">
+      ❌ {{ formError }}
+    </div>
+
+    <form (ngSubmit)="saveDocument()" class="space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        <div>
+          <label class="block mb-2 font-medium text-sm text-gray-700">Patient *</label>
+          <select [(ngModel)]="newDocument.patientId" name="patientId" required
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500">
+            <option [value]="0">— Sélectionner un patient —</option>
+            <option *ngFor="let p of patients" [value]="p.id">{{ p.nom }} {{ p.prenom }}</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block mb-2 font-medium text-sm text-gray-700">Type *</label>
+          <select [(ngModel)]="newDocument.type" name="type" required
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500">
+            <option value="">— Sélectionner un type —</option>
+            <option *ngFor="let t of typesDocument" [value]="t">{{ t }}</option>
+          </select>
+          <div *ngIf="classificationEnCours" class="mt-2 text-xs text-blue-600">
+            🔄 Classification IA en cours...
+          </div>
+          <div *ngIf="classificationResult && !classificationEnCours"
+               class="mt-2 p-2 rounded-lg text-xs"
+               [ngClass]="{
+                 'bg-green-50 text-green-700 border border-green-200': classificationResult.confiance === 'HAUTE',
+                 'bg-yellow-50 text-yellow-700 border border-yellow-200': classificationResult.confiance === 'MOYENNE',
+                 'bg-red-50 text-red-700 border border-red-200': classificationResult.confiance === 'FAIBLE'
+               }">
+            🤖 IA détecte : <strong>{{ classificationResult.type }}</strong>
+            — Score {{ classificationResult.score }}%
+            ({{ classificationResult.confiance }})
+          </div>
+        </div>
+
+        <div>
+          <label class="block mb-2 font-medium text-sm text-gray-700">Catégorie</label>
+          <select [(ngModel)]="newDocument.categorie" name="categorie"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500">
+            <option value="">— Sélectionner —</option>
+            <option *ngFor="let c of categories" [value]="c">{{ c }}</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block mb-2 font-medium text-sm text-gray-700">Date d'upload *</label>
+          <input type="date" [(ngModel)]="newDocument.dateUpload" name="dateUpload" required
+                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <!-- UPLOAD FICHIER + OCR -->
+        <div class="md:col-span-2">
+          <label class="block mb-2 font-medium text-sm text-gray-700">
+            Fichier {{ isEditMode ? '' : '*' }}
+          </label>
+          <div class="border-2 border-dashed border-gray-300 rounded-xl p-5 text-center hover:border-blue-400 transition-colors">
+            <input type="file" #fileInput (change)="onFileSelected($event)"
+                   accept=".pdf,.doc,.docx,.jpg,.png,.txt" class="hidden" />
+            <div *ngIf="!selectedFile && !newDocument.nomFichier" (click)="fileInput.click()"
+                 class="cursor-pointer">
+              <div class="text-5xl mb-3">📄</div>
+              <p class="text-sm text-gray-500 font-medium">Cliquez pour sélectionner un fichier</p>
+              <p class="text-xs text-gray-400 mt-1">PDF, DOC, DOCX, JPG, PNG, TXT</p>
+            </div>
+            <div *ngIf="selectedFile || newDocument.nomFichier"
+                 class="flex flex-col gap-2 bg-blue-50 rounded-lg p-3">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="text-2xl">📎</span>
+                  <div class="text-left">
+                    <p class="text-sm text-blue-700 font-medium">{{ newDocument.nomFichier }}</p>
+                    <p *ngIf="selectedFile" class="text-xs text-gray-400">
+                      {{ (selectedFile.size / 1024).toFixed(1) }} KB
+                    </p>
+                  </div>
+                </div>
+                <button type="button" (click)="removeFile()"
+                        class="text-red-500 hover:text-red-700 text-sm font-medium">
+                  ✕ Retirer
+                </button>
+              </div>
+              <div *ngIf="ocrLoading" class="text-blue-600 text-sm mt-2">
+                🔍 Analyse OCR en cours...
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- OCR RÉSULTAT -->
+        <div class="md:col-span-2" *ngIf="ocrLoading || newDocument.contenuOcr">
+          <label class="block mb-2 font-medium text-sm text-gray-700">🔍 Texte extrait (OCR)</label>
+          <div *ngIf="ocrLoading" class="flex items-center gap-2 text-blue-600 text-sm py-3">
+            <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+            Extraction OCR en cours...
+          </div>
+          <div *ngIf="!ocrLoading && newDocument.contenuOcr">
+            <textarea [(ngModel)]="newDocument.contenuOcr" name="contenuOcr" rows="5"
+                      class="w-full px-4 py-3 border border-green-300 rounded-lg bg-green-50 text-sm font-mono focus:ring-2 focus:ring-green-400"
+                      placeholder="Texte extrait..."></textarea>
+            <p class="text-xs text-green-600 mt-1">
+              ✅ Texte extrait — vous pouvez le corriger avant d'enregistrer
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ACTIONS -->
+      <div class="flex justify-end gap-4 pt-6 border-t">
+        <button type="button" (click)="cancelEdit()"
+                class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-gray-700">
+          Annuler
+        </button>
+        <button type="submit"
+                class="px-6 py-2 text-white rounded-lg font-medium"
+                [ngClass]="isEditMode ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-blue-600 hover:bg-blue-700'">
+          {{ isEditMode ? '💾 Mettre à jour' : '✅ Enregistrer' }}
+        </button>
+      </div>
+    </form>
+  </div>
+
+</div>

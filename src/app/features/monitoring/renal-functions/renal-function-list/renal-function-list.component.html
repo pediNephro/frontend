@@ -1,0 +1,121 @@
+<!-- renal-function-list.component.html -->
+<div class="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10">
+
+  <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <h2 class="text-title-md2 font-bold text-black dark:text-white">Renal Functions</h2>
+    <nav>
+      <ol class="flex items-center gap-2">
+        <li><a class="font-medium" routerLink="/">Dashboard /</a></li>
+        <li><a class="font-medium" routerLink="/monitoring">Monitoring /</a></li>
+        <li class="font-medium text-blue-500">Renal Functions</li>
+      </ol>
+    </nav>
+  </div>
+
+  <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h3 class="text-lg font-semibold text-black dark:text-white">Renal Function Assessments</h3>
+      <p class="text-sm text-gray-600 dark:text-gray-400">Track kidney function through GFR calculations and creatinine levels</p>
+    </div>
+    <a
+      routerLink="/renal-functions/new"
+      class="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-black hover:bg-opacity-90"
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+        <path d="M12 4v16m8-8H4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Add Renal Function
+    </a>
+  </div>
+
+  <div *ngIf="isLoading" class="flex items-center justify-center py-24">
+    <span class="h-10 w-10 animate-spin rounded-full border-4 border-solid border-primary border-t-transparent"></span>
+  </div>
+
+  <div *ngIf="error && !isLoading" class="flex w-full border-l-6 border-red-500 bg-red-100 dark:bg-red-900/30 px-7 py-4 shadow-md">
+    <p class="text-red-700 dark:text-red-300">{{ error }}</p>
+  </div>
+
+  <div *ngIf="!isLoading && !error" class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+    <div class="border-b border-stroke px-6 py-4 dark:border-strokedark">
+      <h3 class="font-medium text-black dark:text-white">Renal Function Records</h3>
+    </div>
+
+    <div *ngIf="renalFunctions.length === 0" class="p-6 text-center">
+      <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
+        <svg class="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+      </div>
+      <h3 class="text-lg font-medium text-gray-900 dark:text-white">No renal function records</h3>
+      <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Get started by adding your first renal function assessment.</p>
+      <div class="mt-6">
+        <a
+          routerLink="/renal-functions/new"
+          class="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-black hover:bg-opacity-90"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M12 4v16m8-8H4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Add First Assessment
+        </a>
+      </div>
+    </div>
+
+    <div *ngIf="renalFunctions.length > 0" class="overflow-x-auto">
+      <table class="w-full table-auto">
+        <thead>
+          <tr class="bg-gray-2 text-left dark:bg-meta-4">
+            <th class="px-6 py-4 font-medium text-black dark:text-white">ID</th>
+            <th class="px-6 py-4 font-medium text-black dark:text-white">Creatinine (mg/dL)</th>
+            <th class="px-6 py-4 font-medium text-black dark:text-white">GFR</th>
+            <th class="px-6 py-4 font-medium text-black dark:text-white">Formula</th>
+            <th class="px-6 py-4 font-medium text-black dark:text-white">Status</th>
+            <th class="px-6 py-4 font-medium text-black dark:text-white">Assessment Date</th>
+            <th class="px-6 py-4 font-medium text-black dark:text-white">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let renalFunction of renalFunctions" class="border-b border-stroke dark:border-strokedark">
+            <td class="px-6 py-4 text-sm text-black dark:text-white">{{ renalFunction.id }}</td>
+            <td class="px-6 py-4 text-sm text-black dark:text-white">{{ renalFunction.creatinineLevel?.toFixed(2) || 'N/A' }}</td>
+            <td class="px-6 py-4 text-sm text-black dark:text-white">{{ renalFunction.gfr?.toFixed(1) || 'Not calculated' }}</td>
+            <td class="px-6 py-4 text-sm text-black dark:text-white">{{ renalFunction.gfrFormula || 'N/A' }}</td>
+            <td class="px-6 py-4">
+              <span
+                class="inline-flex rounded-full px-3 py-1 text-xs font-medium"
+                [ngClass]="getGfrStatus(renalFunction.gfr).color"
+              >
+                {{ getGfrStatus(renalFunction.gfr).text }}
+              </span>
+            </td>
+            <td class="px-6 py-4 text-sm text-black dark:text-white">{{ formatDate(renalFunction.calculationDate) }}</td>
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-2">
+                <a
+                  [routerLink]="['/renal-functions', renalFunction.id]"
+                  class="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                  title="View Details"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </a>
+                <a
+                  [routerLink]="['/renal-functions', renalFunction.id, 'edit']"
+                  class="text-yellow-500 hover:text-yellow-700 dark:text-yellow-400 dark:hover:text-yellow-300"
+                  title="Edit"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </a>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

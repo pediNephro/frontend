@@ -1,0 +1,73 @@
+<div class="flex h-screen ml-[290px] p-6 gap-6">
+
+  <!-- LEFT SIDE: FORM -->
+  <div class="w-1/2 bg-white dark:bg-gray-900 p-6 rounded-2xl shadow overflow-auto">
+
+    <h2 class="text-2xl font-semibold mb-6 dark:text-white">
+      {{ isEditMode ? 'Edit Template' : 'Create Template' }}
+    </h2>
+
+    <form [formGroup]="templateForm"
+          (ngSubmit)="onSubmit()"
+          class="space-y-5">
+
+      <div>
+        <label class="block mb-2 text-sm font-medium dark:text-gray-300">
+          Template Name
+        </label>
+        <input type="text"
+               formControlName="templateName"
+               class="w-full border rounded-xl p-3 dark:bg-gray-800 dark:border-gray-700"
+               placeholder="Enter template name" />
+        <small class="text-red-500"
+               *ngIf="templateForm.get('templateName')?.touched && templateForm.get('templateName')?.invalid">
+          Template name is required.
+        </small>
+      </div>
+
+      <div>
+        <label class="block mb-2 text-sm font-medium dark:text-gray-300">
+          Template HTML Code
+        </label>
+        <textarea
+          formControlName="templateHtml"
+          rows="18"
+          class="w-full border rounded-xl p-3 font-mono text-sm
+                 dark:bg-gray-800 dark:border-gray-700">
+        </textarea>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <input type="checkbox" formControlName="active">
+        <label class="dark:text-gray-300">Active</label>
+      </div>
+
+      <div class="flex gap-3">
+        <button type="submit"
+                class="bg-brand-500 hover:bg-brand-600 text-white px-6 py-2 rounded-xl shadow">
+          {{ isEditMode ? 'Update Template' : 'Create Template' }}
+        </button>
+        <a routerLink="/templates"
+           class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-2 rounded-xl shadow">
+          Cancel
+        </a>
+      </div>
+
+    </form>
+  </div>
+
+  <!-- RIGHT SIDE: PREVIEW -->
+  <div class="w-1/2 bg-gray-100 dark:bg-gray-800 p-4 rounded-2xl shadow flex flex-col">
+
+    <h3 class="text-lg font-semibold mb-4 dark:text-white">
+      Live Preview
+    </h3>
+
+    <iframe
+      class="flex-1 w-full bg-white rounded-lg border"
+      [srcdoc]="previewHtml">
+    </iframe>
+
+  </div>
+
+</div>

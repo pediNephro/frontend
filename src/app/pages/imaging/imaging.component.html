@@ -1,0 +1,571 @@
+<!-- ================= MODAL SUPPRESSION ================= -->
+<div *ngIf="showDeleteModal"
+     class="fixed inset-0 z-50 flex items-center justify-center"
+     style="background-color: rgba(0,0,0,0.25)">
+  <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md mx-4">
+    <div class="flex justify-center mb-4">
+      <div class="bg-red-100 rounded-full p-4">
+        <svg class="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+        </svg>
+      </div>
+    </div>
+    <h3 class="text-xl font-bold text-gray-900 text-center mb-2">Confirmer la suppression</h3>
+    <p class="text-gray-500 text-center mb-6">
+      Supprimer l'image <strong>#{{ deletingId }}</strong> ?<br>
+      <span class="text-sm text-red-500">Cette action est irréversible.</span>
+    </p>
+    <div class="flex gap-3">
+      <button (click)="cancelDelete()"
+              class="flex-1 px-4 py-3 border-2 border-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-50">
+        Annuler
+      </button>
+      <button (click)="confirmDelete()"
+              class="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700">
+        Supprimer
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MODAL VISIONNEUSE ================= -->
+<div *ngIf="showViewer"
+     class="fixed inset-0 z-50 flex items-center justify-center"
+     style="background-color: rgba(0,0,0,0.90)">
+  <div class="bg-gray-900 rounded-2xl shadow-2xl w-full max-w-4xl mx-4 overflow-hidden">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-700">
+      <div *ngIf="viewerImage">
+        <div class="flex items-center gap-3 mb-1">
+          <span class="px-3 py-1 bg-blue-600 text-white rounded-full text-sm font-bold">{{ viewerImage.typeImagerie }}</span>
+          <span class="text-gray-400 text-sm">{{ viewerImage.dateExamen | date:'dd/MM/yyyy' }}</span>
+        </div>
+        <p class="text-white font-semibold">{{ getPatientName(viewerImage.patientId) }}</p>
+        <p *ngIf="viewerImage.description" class="text-gray-400 text-xs mt-1">{{ viewerImage.description }}</p>
+      </div>
+      <button (click)="closeViewer()"
+              class="text-gray-400 hover:text-white text-3xl leading-none w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-700">✕</button>
+    </div>
+    <div class="flex items-center justify-center bg-black" style="height: 460px; overflow: hidden;">
+      <ng-container *ngIf="viewerImage">
+        <img *ngIf="viewerImage.urlStockage"
+             [src]="viewerImage.urlStockage"
+             [style.transform]="'rotate(' + rotation + 'deg) scale(' + zoom + ')'"
+             style="transition: transform 0.3s ease; max-height: 100%; max-width: 100%; object-fit: contain;"
+             alt="Image médicale" />
+        <div *ngIf="!viewerImage.urlStockage" class="text-center text-gray-500">
+          <div class="text-7xl mb-4">🖼️</div>
+          <p class="text-gray-400 text-lg">Aucune image disponible</p>
+        </div>
+      </ng-container>
+    </div>
+    <div class="flex items-center justify-center gap-3 px-6 py-4 border-t border-gray-700 flex-wrap bg-gray-800">
+      <div class="flex items-center gap-2 bg-gray-700 rounded-lg px-3 py-2">
+        <button (click)="zoomOut()" class="text-white hover:text-blue-300 text-lg font-bold w-6 h-6 flex items-center justify-center">−</button>
+        <span class="text-white text-sm font-mono w-12 text-center">{{ (zoom * 100).toFixed(0) }}%</span>
+        <button (click)="zoomIn()" class="text-white hover:text-blue-300 text-lg font-bold w-6 h-6 flex items-center justify-center">+</button>
+      </div>
+      <div class="w-px h-8 bg-gray-600"></div>
+      <div class="flex items-center gap-2">
+        <button (click)="rotateLeft()" class="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 text-sm font-medium">↺ −90°</button>
+        <span class="text-gray-400 text-xs font-mono w-10 text-center">{{ rotation }}°</span>
+        <button (click)="rotateRight()" class="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 text-sm font-medium">↻ +90°</button>
+      </div>
+      <div class="w-px h-8 bg-gray-600"></div>
+      <button (click)="resetView()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium">↺ Reset</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MODAL COMPARAISON ================= -->
+<div *ngIf="showComparaison"
+     class="fixed inset-0 z-50 flex items-center justify-center"
+     style="background-color: rgba(0,0,0,0.85)">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-6xl mx-4"
+       style="max-height: 92vh; overflow-y: auto;">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between px-6 py-4 border-b sticky top-0 bg-white z-10 shadow-sm">
+      <div>
+        <h3 class="font-bold text-xl text-gray-900">📊 Analyse temporelle multi-images</h3>
+        <p class="text-sm text-gray-600 font-medium mt-1">Patient : {{ getPatientName(filterPatientId) }}</p>
+        <p *ngIf="comparaisonData" class="text-xs text-gray-500 mt-1">
+          {{ comparaisonData.totalImages }} image(s)
+          <span *ngIf="comparaisonData.typesDisponibles && comparaisonData.typesDisponibles.length > 0">
+            — {{ comparaisonData.typesDisponibles.join(', ') }}
+          </span>
+        </p>
+      </div>
+      <button (click)="showComparaison = false"
+              class="text-gray-400 hover:text-gray-700 text-3xl leading-none w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100">✕</button>
+    </div>
+
+    <div class="p-6">
+
+      <!-- Aucune image -->
+      <div *ngIf="!comparaisonData || comparaisonData.totalImages === 0" class="text-center text-gray-500 py-16">
+        <div class="text-6xl mb-4">📭</div>
+        <p class="font-semibold text-lg">Aucune image pour ce patient.</p>
+      </div>
+
+      <!-- 1 seule image -->
+      <div *ngIf="comparaisonData && comparaisonData.totalImages === 1" class="text-center text-gray-500 py-10">
+        <div class="text-5xl mb-3">🖼️</div>
+        <p class="font-semibold text-lg">Une seule image disponible.</p>
+        <p class="text-sm text-gray-400 mt-1">Il faut au moins 2 images pour comparer.</p>
+      </div>
+
+      <!-- 2+ images -->
+      <div *ngIf="comparaisonData && comparaisonData.totalImages >= 2">
+
+        <!-- RÉSUMÉ GLOBAL IA -->
+        <div *ngIf="!analyseIALoading && evolutionIA" class="grid grid-cols-3 gap-4 mb-6">
+          <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-4 text-center">
+            <p class="text-xs text-indigo-500 font-semibold uppercase tracking-wide mb-1">Évolution globale</p>
+            <p class="text-2xl font-bold"
+               [ngClass]="{
+                 'text-red-600': evolutionIA.global_evolution === 'AGGRAVATION',
+                 'text-yellow-600': evolutionIA.global_evolution === 'MODIFICATION',
+                 'text-green-600': evolutionIA.global_evolution === 'STABLE'
+               }">
+              {{ getEvolutionIcon(evolutionIA.global_evolution) }} {{ evolutionIA.global_evolution }}
+            </p>
+          </div>
+          <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 text-center">
+            <p class="text-xs text-blue-500 font-semibold uppercase tracking-wide mb-1">Variation moyenne</p>
+            <p class="text-2xl font-bold text-blue-700">{{ evolutionIA.variation_moyenne }}%</p>
+          </div>
+          <div class="bg-orange-50 border border-orange-200 rounded-xl p-4 text-center">
+            <p class="text-xs text-orange-500 font-semibold uppercase tracking-wide mb-1">Variation max</p>
+            <p class="text-2xl font-bold text-orange-700">{{ evolutionIA.variation_max }}%</p>
+          </div>
+        </div>
+
+        <!-- GRAPHIQUE ÉVOLUTION -->
+        <div class="bg-white rounded-xl p-5 border border-gray-200 shadow-sm mb-6">
+          <h4 class="font-semibold text-gray-700 mb-1 flex items-center gap-2">
+            📈 Graphique d'évolution entre examens
+          </h4>
+          <p class="text-xs text-gray-400 mb-4">Chaque barre représente la variation entre deux examens consécutifs</p>
+          <div class="flex gap-4 mb-3 flex-wrap">
+            <div class="flex items-center gap-1 text-xs text-gray-600">
+              <div class="w-3 h-3 rounded-sm" style="background:#16a34a;"></div> Stable (&lt; 5%)
+            </div>
+            <div class="flex items-center gap-1 text-xs text-gray-600">
+              <div class="w-3 h-3 rounded-sm" style="background:#d97706;"></div> Modification (5–15%)
+            </div>
+            <div class="flex items-center gap-1 text-xs text-gray-600">
+              <div class="w-3 h-3 rounded-sm" style="background:#dc2626;"></div> Aggravation (&gt; 15%)
+            </div>
+          </div>
+          <div *ngIf="analyseIALoading" class="flex items-center justify-center h-32 text-indigo-400 gap-2">
+            <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+            <span class="text-sm">Analyse en cours...</span>
+          </div>
+          <canvas id="evolutionChart" style="max-height: 280px;" *ngIf="!analyseIALoading"></canvas>
+        </div>
+
+        <!-- COMPARAISONS DÉTAILLÉES -->
+        <div class="mb-6" *ngIf="!analyseIALoading && comparaisonsDetail.length > 0">
+          <h4 class="font-semibold text-gray-700 mb-3 flex items-center gap-2">
+            <span class="w-2 h-5 bg-purple-500 rounded inline-block"></span>
+            🔬 Comparaisons détaillées ({{ comparaisonsDetail.length }} paire(s))
+          </h4>
+          <div class="flex gap-2 mb-4 overflow-x-auto pb-1">
+            <button *ngFor="let comp of comparaisonsDetail; let i = index"
+                    (click)="selectComparaison(i)"
+                    class="flex-shrink-0 px-3 py-2 rounded-lg text-xs font-semibold border-2 transition-all"
+                    [ngClass]="{
+                      'border-indigo-500 bg-indigo-50 text-indigo-700': activeComparaisonIndex === i,
+                      'border-gray-200 bg-white text-gray-600 hover:border-gray-300': activeComparaisonIndex !== i
+                    }">
+              <span [style.color]="getEvolutionColor(comp.evolution)">{{ getEvolutionIcon(comp.evolution) }}</span>
+              Exam {{ i + 1 }} → {{ i + 2 }}
+              <span class="ml-1 text-gray-400">({{ comp.variation }}%)</span>
+            </button>
+          </div>
+
+          <ng-container *ngIf="comparaisonsDetail[activeComparaisonIndex] as comp">
+            <div class="border border-gray-200 rounded-xl overflow-hidden">
+              <div class="px-4 py-3 bg-gray-50 border-b flex items-center justify-between flex-wrap gap-2">
+                <div class="flex items-center gap-3">
+                  <span class="text-sm font-semibold text-gray-700">
+                    Examen {{ activeComparaisonIndex + 1 }}
+                    <span class="text-gray-400 mx-1">→</span>
+                    Examen {{ activeComparaisonIndex + 2 }}
+                  </span>
+                  <span *ngIf="comp.from_date" class="text-xs text-gray-500">
+                    {{ comp.from_date | date:'dd/MM/yyyy' }} → {{ comp.to_date | date:'dd/MM/yyyy' }}
+                  </span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="px-3 py-1 rounded-full text-xs font-bold"
+                        [ngClass]="{
+                          'bg-red-100 text-red-700': comp.evolution === 'AGGRAVATION',
+                          'bg-yellow-100 text-yellow-700': comp.evolution === 'MODIFICATION',
+                          'bg-green-100 text-green-700': comp.evolution === 'STABLE'
+                        }">
+                    {{ getEvolutionIcon(comp.evolution) }} {{ comp.evolution }}
+                  </span>
+                  <span class="text-sm font-bold text-gray-700">{{ comp.variation }}%</span>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-3 gap-0 divide-x divide-gray-200">
+                <!-- Avant -->
+                <div class="p-3">
+                  <p class="text-xs font-semibold text-gray-500 mb-2 text-center uppercase tracking-wide">
+                    Avant — {{ comp.from_type || ('Examen ' + (activeComparaisonIndex + 1)) }}
+                  </p>
+                  <div class="bg-gray-900 rounded-lg overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
+                       style="height: 180px;"
+                       (click)="openViewerFromTimeline({urlStockage: comp.from_url, typeImagerie: comp.from_type || '', dateExamen: comp.from_date || '', description: '', nomFichier: ''})">
+                    <img *ngIf="comp.from_url" [src]="comp.from_url" style="width:100%; height:100%; object-fit:contain;" alt="Avant" />
+                    <div *ngIf="!comp.from_url" class="w-full h-full flex items-center justify-center text-gray-400 text-3xl">🖼️</div>
+                  </div>
+                  <p class="text-xs text-center text-gray-400 mt-1">{{ comp.from_date | date:'dd/MM/yyyy' }}</p>
+                </div>
+
+                <!-- Heatmap -->
+                <div class="p-3">
+                  <p class="text-xs font-semibold text-purple-600 mb-2 text-center uppercase tracking-wide">🔥 Zones modifiées</p>
+                  <div class="bg-gray-900 rounded-lg overflow-hidden" style="height: 180px;">
+                    <img *ngIf="comp.heatmap" [src]="comp.heatmap" style="width:100%; height:100%; object-fit:contain;" alt="Heatmap" />
+                    <div *ngIf="!comp.heatmap" class="w-full h-full flex items-center justify-center text-gray-400 text-xs text-center px-2">
+                      Heatmap indisponible
+                    </div>
+                  </div>
+                  <p class="text-xs text-center text-purple-500 mt-1 font-medium">Variation : {{ comp.variation }}%</p>
+                </div>
+
+                <!-- Après -->
+                <div class="p-3">
+                  <p class="text-xs font-semibold text-gray-500 mb-2 text-center uppercase tracking-wide">
+                    Après — {{ comp.to_type || ('Examen ' + (activeComparaisonIndex + 2)) }}
+                  </p>
+                  <div class="bg-gray-900 rounded-lg overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
+                       style="height: 180px;"
+                       (click)="openViewerFromTimeline({urlStockage: comp.to_url, typeImagerie: comp.to_type || '', dateExamen: comp.to_date || '', description: '', nomFichier: ''})">
+                    <img *ngIf="comp.to_url" [src]="comp.to_url" style="width:100%; height:100%; object-fit:contain;" alt="Après" />
+                    <div *ngIf="!comp.to_url" class="w-full h-full flex items-center justify-center text-gray-400 text-3xl">🖼️</div>
+                  </div>
+                  <p class="text-xs text-center text-gray-400 mt-1">{{ comp.to_date | date:'dd/MM/yyyy' }}</p>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+        </div>
+
+        <!-- TIMELINE CHRONOLOGIQUE -->
+        <div class="bg-gray-50 rounded-xl p-5 mb-6">
+          <h4 class="font-semibold text-gray-700 mb-5 flex items-center gap-2 text-sm uppercase tracking-wide">
+            <span class="w-2 h-5 bg-green-500 rounded inline-block"></span>
+            📅 Chronologie — {{ comparaisonData.timeline.length }} examens
+          </h4>
+          <div class="relative">
+            <div class="absolute top-4 left-4 right-4 h-0.5 bg-gradient-to-r from-green-400 to-blue-500"></div>
+            <div class="flex items-start overflow-x-auto pb-3">
+              <div *ngFor="let img of comparaisonData.timeline; let i = index"
+                   class="flex flex-col items-center min-w-max" style="padding: 0 12px;">
+                <div class="w-8 h-8 rounded-full border-2 border-white shadow-lg flex items-center justify-center text-white text-xs font-bold z-10 relative mb-2"
+                     [ngClass]="{
+                       'bg-green-500': i === 0,
+                       'bg-blue-600': i === comparaisonData.timeline.length - 1 && i !== 0,
+                       'bg-blue-400': i > 0 && i < comparaisonData.timeline.length - 1
+                     }">{{ i + 1 }}</div>
+                <div class="w-14 h-14 rounded-lg overflow-hidden border-2 border-white shadow mb-2 bg-gray-800 cursor-pointer hover:border-blue-400 transition-colors"
+                     (click)="openViewerFromTimeline(img)">
+                  <img *ngIf="img.urlStockage" [src]="img.urlStockage" class="w-full h-full object-cover" />
+                  <div *ngIf="!img.urlStockage" class="w-full h-full flex items-center justify-center text-gray-400 text-xl">🖼️</div>
+                </div>
+                <span class="text-xs text-blue-700 font-bold text-center leading-tight" style="max-width: 64px;">{{ img.typeImagerie }}</span>
+                <span class="text-xs text-gray-500 text-center mt-0.5">{{ img.dateExamen | date:'dd/MM/yy' }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="flex gap-4 mt-4 justify-center flex-wrap">
+            <div class="flex items-center gap-1 text-xs text-gray-500">
+              <div class="w-3 h-3 rounded-full bg-green-500"></div><span>Premier examen</span>
+            </div>
+            <div class="flex items-center gap-1 text-xs text-gray-500">
+              <div class="w-3 h-3 rounded-full bg-blue-400"></div><span>Examens intermédiaires</span>
+            </div>
+            <div class="flex items-center gap-1 text-xs text-gray-500">
+              <div class="w-3 h-3 rounded-full bg-blue-600"></div><span>Dernier examen</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- SYNTHÈSE IA -->
+        <div class="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-5 border border-indigo-200">
+          <h4 class="font-bold text-indigo-800 mb-4 flex items-center gap-2 text-lg">
+            🤖 Synthèse IA — Suivi imagerie
+          </h4>
+          <div *ngIf="analyseIALoading" class="flex items-center gap-3 text-indigo-600 py-4">
+            <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+            <span class="text-sm font-medium">Analyse IA en cours...</span>
+          </div>
+          <div *ngIf="!analyseIALoading && alertesIA && alertesIA.length > 0" class="mb-4 space-y-2">
+            <p class="text-xs font-semibold text-indigo-700 uppercase tracking-wide mb-2">Alertes détectées</p>
+            <div *ngFor="let alerte of alertesIA"
+                 class="text-sm px-4 py-2.5 rounded-lg font-medium flex items-center gap-2"
+                 [ngClass]="{
+                   'bg-red-100 text-red-800 border border-red-200': alerte.startsWith('🚨'),
+                   'bg-yellow-100 text-yellow-800 border border-yellow-200': alerte.startsWith('⚠️'),
+                   'bg-blue-100 text-blue-800 border border-blue-200': alerte.startsWith('ℹ️')
+                 }">{{ alerte }}</div>
+          </div>
+          <div *ngIf="!analyseIALoading && (!alertesIA || alertesIA.length === 0)"
+               class="mb-4 px-4 py-2.5 bg-green-100 text-green-800 border border-green-200 rounded-lg text-sm font-medium">
+            ✅ Aucune alerte détectée pour ce patient
+          </div>
+          <div *ngIf="!analyseIALoading && analyseIAResult"
+               class="bg-white rounded-xl p-5 border border-indigo-100 shadow-sm">
+            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Rapport d'analyse</p>
+            <pre class="text-sm text-gray-700 whitespace-pre-wrap font-sans leading-relaxed">{{ analyseIAResult }}</pre>
+          </div>
+          <p class="text-xs text-indigo-400 mt-4 italic flex items-center gap-1">
+            <span>⚠️</span>
+            Cette analyse est générée automatiquement à titre indicatif et ne remplace pas l'avis d'un médecin.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= PAGE PRINCIPALE ================= -->
+<div class="p-6">
+  <div class="mb-6">
+    <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">🖼️ Imagerie Médicale</h1>
+    <p class="text-gray-500 dark:text-gray-400">Gestion des images médicales des patients</p>
+  </div>
+
+  <nav class="flex gap-1 mb-6 border-b pb-0 flex-wrap">
+    <button (click)="switchTab('list')"
+            class="py-2 px-4 border-b-2 font-medium text-sm transition-colors"
+            [class.border-blue-500]="activeTab==='list'"
+            [class.text-blue-600]="activeTab==='list'"
+            [class.border-transparent]="activeTab!=='list'"
+            [class.text-gray-500]="activeTab!=='list'">
+      📋 Liste ({{ images.length }})
+    </button>
+    <button (click)="switchTab('add')"
+            class="py-2 px-4 border-b-2 font-medium text-sm transition-colors"
+            [class.border-blue-500]="activeTab==='add'"
+            [class.text-blue-600]="activeTab==='add'"
+            [class.border-transparent]="activeTab!=='add'"
+            [class.text-gray-500]="activeTab!=='add'">
+      ➕ {{ isEditMode ? 'Modifier Image' : 'Nouvelle Image' }}
+    </button>
+  </nav>
+
+  <div *ngIf="loading" class="text-center py-8">
+    <div class="inline-flex items-center gap-3 text-blue-600">
+      <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+      </svg>
+      <span class="font-semibold">Chargement...</span>
+    </div>
+  </div>
+
+  <div *ngIf="errorMessage"
+       class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 flex items-center gap-2">
+    ❌ {{ errorMessage }}
+    <button (click)="errorMessage=''" class="ml-auto text-red-400 hover:text-red-600">✕</button>
+  </div>
+
+  <!-- LISTE -->
+  <div *ngIf="activeTab === 'list' && !loading">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-4 mb-4 border border-gray-100">
+      <div class="flex gap-3 flex-wrap items-end">
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Patient</label>
+          <select [(ngModel)]="filterPatientId"
+                  class="px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:ring-2 focus:ring-blue-300">
+            <option [value]="0">Tous les patients</option>
+            <option *ngFor="let p of patients" [value]="p.id">{{ p.nom }} {{ p.prenom }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Type d'imagerie</label>
+          <select [(ngModel)]="filterType"
+                  class="px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:ring-2 focus:ring-blue-300">
+            <option value="">Tous les types</option>
+            <option *ngFor="let t of typesImagerie" [value]="t">{{ t }}</option>
+          </select>
+        </div>
+        <button (click)="appliquerFiltres()"
+                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium">
+          🔍 Filtrer
+        </button>
+        <button (click)="resetFiltres()"
+                class="px-4 py-2 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 text-sm">
+          Réinitialiser
+        </button>
+        <button (click)="ouvrirComparaison()"
+                [disabled]="filterPatientId === 0 || comparaisonLoading"
+                class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+          <svg *ngIf="comparaisonLoading" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+          </svg>
+          <span>{{ comparaisonLoading ? 'Chargement...' : '📊 Analyser toutes les images IA' }}</span>
+        </button>
+        <p *ngIf="filterPatientId === 0" class="text-xs text-gray-400 self-center italic">
+          ← Sélectionnez un patient pour comparer
+        </p>
+      </div>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow overflow-hidden border border-gray-100">
+      <table class="w-full text-left">
+        <thead class="bg-gray-50 dark:bg-gray-700 border-b border-gray-200">
+          <tr>
+            <th class="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wide">ID</th>
+            <th class="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wide">Patient</th>
+            <th class="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wide">Type</th>
+            <th class="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wide">Date Examen</th>
+            <th class="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wide">Description</th>
+            <th class="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wide">Aperçu</th>
+            <th class="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wide">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          <tr *ngIf="images.length === 0">
+            <td colspan="7" class="text-center py-16 text-gray-400">
+              <div class="text-5xl mb-3">🖼️</div>
+              <p class="font-medium text-gray-500">Aucune image médicale enregistrée.</p>
+              <button (click)="switchTab('add')"
+                      class="mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">
+                ➕ Ajouter une image
+              </button>
+            </td>
+          </tr>
+          <tr *ngFor="let img of images" class="hover:bg-blue-50 transition-colors">
+            <td class="px-6 py-4 text-sm font-mono text-gray-400">#{{ img.id }}</td>
+            <td class="px-6 py-4 font-medium text-gray-900">{{ getPatientName(img.patientId) }}</td>
+            <td class="px-6 py-4">
+              <span class="px-2 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-bold border border-blue-200">{{ img.typeImagerie }}</span>
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-600">{{ img.dateExamen | date:'dd/MM/yyyy' }}</td>
+            <td class="px-6 py-4 text-sm text-gray-500 max-w-xs">
+              <span class="truncate block" [title]="img.description || ''">{{ img.description || '—' }}</span>
+            </td>
+            <td class="px-6 py-4">
+              <div class="w-14 h-14 rounded-lg overflow-hidden border-2 border-gray-200 bg-gray-100 cursor-pointer hover:border-blue-400 transition-colors"
+                   (click)="openViewer(img)">
+                <img *ngIf="img.urlStockage" [src]="img.urlStockage" class="w-full h-full object-cover" alt="miniature" />
+                <div *ngIf="!img.urlStockage" class="w-full h-full flex items-center justify-center text-gray-400 text-xl">🖼️</div>
+              </div>
+            </td>
+            <td class="px-6 py-4">
+              <div class="flex gap-2 flex-wrap">
+                <button (click)="openViewer(img)" class="px-3 py-1.5 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 text-xs font-medium border border-green-200">👁️ Voir</button>
+                <button (click)="editImage(img)" class="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 text-xs font-medium border border-blue-200">✏️ Modifier</button>
+                <button (click)="openDeleteModal(img.id!)" class="px-3 py-1.5 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 text-xs font-medium border border-red-200">🗑️ Supprimer</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- FORMULAIRE -->
+  <div *ngIf="activeTab === 'add'" class="bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-gray-100">
+    <h2 class="text-xl font-bold mb-5 flex items-center gap-2">
+      <span>{{ isEditMode ? '✏️' : '➕' }}</span>
+      <span>{{ isEditMode ? 'Modifier Image #' + editingId : 'Nouvelle Image Médicale' }}</span>
+    </h2>
+    <div *ngIf="isEditMode" class="mb-5 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 px-4 py-3 rounded-lg text-sm">
+      ⚠️ Vous modifiez l'image <strong>#{{ editingId }}</strong>
+    </div>
+    <div *ngIf="formError" class="mb-5 bg-red-50 border-l-4 border-red-400 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
+      ❌ {{ formError }}
+      <button (click)="formError=''" class="ml-auto text-red-400 hover:text-red-600">✕</button>
+    </div>
+    <form (ngSubmit)="saveImage()" class="space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label class="block mb-2 font-semibold text-sm text-gray-700">Patient <span class="text-red-500">*</span></label>
+          <select [(ngModel)]="newImage.patientId" name="patientId" required
+                  class="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-400 text-sm">
+            <option [value]="0">— Sélectionner un patient —</option>
+            <option *ngFor="let p of patients" [value]="p.id">{{ p.nom }} {{ p.prenom }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="block mb-2 font-semibold text-sm text-gray-700">Type d'imagerie <span class="text-red-500">*</span></label>
+          <select [(ngModel)]="newImage.typeImagerie" name="typeImagerie" required
+                  class="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-400 text-sm">
+            <option value="">— Sélectionner un type —</option>
+            <option *ngFor="let t of typesImagerie" [value]="t">{{ t }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="block mb-2 font-semibold text-sm text-gray-700">Date d'examen <span class="text-red-500">*</span></label>
+          <input type="date" [(ngModel)]="newImage.dateExamen" name="dateExamen" required
+                 class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 text-sm">
+        </div>
+        <div>
+          <label class="block mb-2 font-semibold text-sm text-gray-700">Description</label>
+          <input type="text" [(ngModel)]="newImage.description" name="description"
+                 placeholder="Ex: Échographie rénale bilatérale..."
+                 class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 text-sm">
+        </div>
+        <div class="md:col-span-2">
+          <label class="block mb-2 font-semibold text-sm text-gray-700">
+            Image médicale
+            <span *ngIf="!isEditMode" class="text-red-500">*</span>
+            <span *ngIf="isEditMode" class="text-gray-400 font-normal ml-1">(laisser vide pour garder l'image actuelle)</span>
+          </label>
+          <div class="border-2 rounded-xl p-6 text-center transition-all"
+               [ngClass]="imagePreview || newImage.urlStockage ? 'border-blue-300 bg-blue-50' : 'border-dashed border-gray-300 hover:border-blue-400 hover:bg-blue-50'">
+            <input type="file" #imgInput (change)="onImageSelected($event)" accept="image/*" class="hidden" />
+            <div *ngIf="!imagePreview && !newImage.urlStockage" (click)="imgInput.click()" class="cursor-pointer py-4">
+              <div class="text-6xl mb-3">🖼️</div>
+              <p class="text-gray-600 font-semibold mb-1">Cliquez pour sélectionner une image</p>
+              <p class="text-xs text-gray-400">JPG, PNG, WEBP, GIF — Max 5MB</p>
+            </div>
+            <div *ngIf="imagePreview || newImage.urlStockage">
+              <img [src]="imagePreview || newImage.urlStockage"
+                   class="max-h-56 mx-auto rounded-xl object-contain shadow-md mb-4" alt="Prévisualisation" />
+              <div class="flex justify-center gap-3">
+                <button type="button" (click)="imgInput.click()"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
+                  🔄 Changer l'image
+                </button>
+                <button type="button" (click)="removeImage()"
+                        class="px-4 py-2 bg-red-50 text-red-600 rounded-lg text-sm font-medium hover:bg-red-100 border border-red-200">
+                  ✕ Retirer
+                </button>
+              </div>
+              <p *ngIf="selectedImage" class="text-xs text-gray-400 mt-3">
+                📎 {{ selectedImage.name }} — {{ (selectedImage.size / 1024).toFixed(1) }} KB
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="flex justify-end gap-4 pt-6 border-t border-gray-100">
+        <button type="button" (click)="cancelEdit()"
+                class="px-6 py-2.5 border-2 border-gray-300 rounded-xl hover:bg-gray-50 text-gray-700 font-medium">
+          Annuler
+        </button>
+        <button type="submit"
+                class="px-6 py-2.5 text-white rounded-xl font-semibold shadow"
+                [ngClass]="isEditMode ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-blue-600 hover:bg-blue-700'">
+          {{ isEditMode ? '💾 Mettre à jour' : '✅ Enregistrer' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

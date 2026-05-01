@@ -1,0 +1,68 @@
+<div class="p-8 ml-[290px] transition-all">
+  <div class="flex justify-between items-center mb-6">
+    <h2 class="text-2xl font-semibold text-gray-800 dark:text-white">
+      Actions Médicales
+    </h2>
+
+    <a
+      routerLink="/actions/create"
+      class="bg-brand-500 hover:bg-brand-600 text-white px-5 py-3 rounded-xl shadow"
+    >
+      + New Action
+    </a>
+  </div>
+
+  <div class="bg-white dark:bg-gray-900 rounded-2xl shadow overflow-hidden">
+    <table class="w-full text-sm text-left">
+      <thead class="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 uppercase text-xs">
+        <tr>
+          <th class="px-6 py-4">Category</th>
+          <th class="px-6 py-4">Action Name</th>
+          <th class="px-6 py-4">Price (TND)</th>
+          <th class="px-6 py-4 text-right">Actions</th>
+        </tr>
+      </thead>
+
+      <tbody class="divide-y dark:divide-gray-700">
+        <tr
+          *ngFor="let action of actions"
+          class="hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+        >
+          <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">
+            {{ action.categoryAct }}
+          </td>
+
+          <td class="px-6 py-4 text-gray-700 dark:text-gray-300">
+            {{ action.nomAct }}
+          </td>
+
+          <td class="px-6 py-4 text-gray-700 dark:text-gray-300">
+            {{ action.prixAct | number:'1.2-2' }}
+          </td>
+
+          <td class="px-6 py-4 text-right flex justify-end gap-4">
+            <a
+              [routerLink]="['/actions/edit', action.id]"
+              class="text-blue-600 hover:underline"
+            >
+              Edit
+            </a>
+
+            <button
+              (click)="delete(action.id)"
+              class="text-red-600 hover:underline"
+            >
+              Delete
+            </button>
+          </td>
+        </tr>
+
+        <tr *ngIf="actions.length === 0">
+          <td colspan="4" class="px-6 py-6 text-center text-gray-500 dark:text-gray-400">
+            No actions found.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
