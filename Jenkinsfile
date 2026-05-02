@@ -60,12 +60,7 @@ pipeline {
             }
             post {
                 always {
-                    publishHTML([
-                        reportDir: 'coverage',
-                        reportFiles: 'index.html',
-                        reportName: 'Code Coverage Report',
-                        allowMissing: true
-                    ])
+                    // Code coverage reports can be viewed in workspace
                 }
             }
         }
