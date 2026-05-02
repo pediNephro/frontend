@@ -4,7 +4,7 @@ pipeline {
     environment {
         // Docker Hub Configuration
         DOCKER_HUB_REPO = 'pedinephro/frontend'
-        DOCKER_HUB_CREDS = credentials('dockerhub-credentials')
+        DOCKER_HUB_CREDS = credentials('dockerhub-creds')
 
         // Build Configuration
         NODE_VERSION = '20'
