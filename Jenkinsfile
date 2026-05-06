@@ -25,20 +25,18 @@ pipeline {
             }
         }
 
-        stage('Deploy') {
+        stage('Deploy to Kubernetes') {
             steps {
                 sh '''
                     set -e
 
-                    echo "Deploying ${SERVICE_NAME}..."
+                    kubectl config use-context kind-pedinephro-cluster
 
-                    kubectl set image deployment/${SERVICE_NAME} \
-                        ${SERVICE_NAME}=${DOCKER_HUB_REPO}:${TAG} \
-                        -n ${NAMESPACE}
+                    kubectl set image deployment/frontend \
+                        frontend=azizos07/frontend:latest \
+                        -n pedinephro
 
-                    kubectl rollout restart deployment/${SERVICE_NAME} -n ${NAMESPACE}
-
-                    kubectl rollout status deployment/${SERVICE_NAME} -n ${NAMESPACE}
+                    kubectl rollout status deployment/frontend -n pedinephro
                 '''
             }
         }
