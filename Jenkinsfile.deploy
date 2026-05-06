@@ -3,26 +3,61 @@ pipeline {
 
     environment {
         DOCKER_HUB_REPO = 'azizos07/frontend'
-        SERVICE_NAME = 'frontend'
-        NAMESPACE = 'pedinephro'
+        SERVICE_NAME     = 'frontend'
+        NAMESPACE        = 'pedinephro'
+        TAG              = 'latest'
+        K8S_CONTEXT      = 'kind-pedinephro-cluster'
     }
 
     stages {
+
         stage('Checkout') {
             steps {
                 checkout scm
             }
         }
 
-        stage('Deploy to Kubernetes') {
-            when {
-                branch 'master'
-            }
+        stage('Pre-checks') {
             steps {
                 sh '''
-                    kubectl config use-context kind-pedinephro-cluster
-                    kubectl set image deployment/${SERVICE_NAME} ${SERVICE_NAME}=${DOCKER_HUB_REPO}:latest -n ${NAMESPACE}
-                    kubectl rollout status deployment/${SERVICE_NAME} -n ${NAMESPACE}
+                    set -e
+                    kubectl version --client
+                    kubectl config use-context ${K8S_CONTEXT}
+                    kubectl get nodes
+                '''
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                sh '''
+                    set -e
+                    kubectl config use-context ${K8S_CONTEXT}
+
+                    # Ensure namespace exists
+                    kubectl get namespace ${NAMESPACE} || kubectl create namespace ${NAMESPACE}
+
+                    # Apply manifests (creates or updates)
+                    kubectl apply -f k8s/frontend-deployment.yaml
+
+                    # Force the new image in case tag didn't change
+                    kubectl set image deployment/${SERVICE_NAME} \
+                        ${SERVICE_NAME}=${DOCKER_HUB_REPO}:${TAG} \
+                        -n ${NAMESPACE}
+
+                    kubectl rollout status deployment/${SERVICE_NAME} -n ${NAMESPACE} --timeout=120s
+                '''
+            }
+        }
+
+        stage('Verify') {
+            steps {
+                sh '''
+                    echo "Pods:"
+                    kubectl get pods -n ${NAMESPACE} -l app=${SERVICE_NAME}
+
+                    echo "Service:"
+                    kubectl get svc -n ${NAMESPACE}
                 '''
             }
         }
@@ -30,10 +65,10 @@ pipeline {
 
     post {
         success {
-            echo "✅ Deployment pipeline succeeded"
+            echo "✅ CD deployment successful"
         }
         failure {
-            echo "❌ Deployment pipeline failed"
+            echo "❌ CD deployment failed"
         }
     }
 }
