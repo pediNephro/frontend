@@ -2,108 +2,66 @@ pipeline {
     agent any
 
     environment {
-        // Docker Hub Configuration
         DOCKER_HUB_REPO = 'azizos07/frontend'
-        DOCKER_HUB_CREDS = credentials('dockerhub-creds')
-
-        // Build Configuration
-        NODE_VERSION = '20'
-        ANGULAR_VERSION = '21'
         SERVICE_NAME = 'frontend'
-        SERVICE_PORT = '80'
+        NAMESPACE = 'pedinephro'
+        TAG = 'latest'
+        K8S_CONTEXT = 'kind-pedinephro-cluster'
     }
 
     stages {
-        stage('Checkout') {
-            steps {
-                echo "=== Cloning Repository ==="
-                checkout scm
-                sh 'git log -1 --pretty=format:"%H %s"'
-            }
-        }
 
-        stage('Dependencies') {
+        stage('Pre-checks') {
             steps {
-                echo "=== Installing Dependencies ==="
                 sh '''
-                    node --version
-                    npm --version
-                    npm install
+                    set -e
+                    echo "Checking kubectl..."
+                    kubectl version --client
+
+                    echo "Checking cluster access..."
+                    kubectl config use-context ${K8S_CONTEXT}
+                    kubectl get nodes
                 '''
             }
         }
 
-        stage('Lint') {
+        stage('Deploy') {
             steps {
-                echo "=== Linting Code ==="
                 sh '''
-                    npm run lint 2>/dev/null || echo "Lint step skipped (no lint script configured)"
+                    set -e
+
+                    echo "Deploying ${SERVICE_NAME}..."
+
+                    kubectl set image deployment/${SERVICE_NAME} \
+                        ${SERVICE_NAME}=${DOCKER_HUB_REPO}:${TAG} \
+                        -n ${NAMESPACE}
+
+                    kubectl rollout restart deployment/${SERVICE_NAME} -n ${NAMESPACE}
+
+                    kubectl rollout status deployment/${SERVICE_NAME} -n ${NAMESPACE}
                 '''
             }
         }
 
-        stage('Build') {
+        stage('Verify') {
             steps {
-                echo "=== Building Angular Application ==="
                 sh '''
-                    npm run build -- --configuration production --output-hashing=all
+                    echo "Pods:"
+                    kubectl get pods -n ${NAMESPACE} -l app=${SERVICE_NAME}
+
+                    echo "Service:"
+                    kubectl get svc -n ${NAMESPACE}
                 '''
-            }
-        }
-
-        stage('Unit Tests') {
-            steps {
-                echo "=== Running Unit Tests ==="
-                sh '''
-                    npm run test -- --watch=false --browsers=ChromeHeadless 2>/dev/null || echo "Tests skipped (no test configuration)"
-                '''
-            }
-            post {
-                always {
-                    // Code coverage reports can be viewed in workspace
-                }
-            }
-        }
-
-        stage('Build Docker Image') {
-            steps {
-                echo "=== Building Docker Image ==="
-                script {
-                    sh '''
-                        docker build -t ${DOCKER_HUB_REPO}:${BUILD_NUMBER} .
-                        docker tag ${DOCKER_HUB_REPO}:${BUILD_NUMBER} ${DOCKER_HUB_REPO}:latest
-                    '''
-                }
-            }
-        }
-
-        stage('Push to Docker Hub') {
-            steps {
-                echo "=== Pushing Image to Docker Hub ==="
-                script {
-                    sh '''
-                        echo $DOCKER_HUB_CREDS_PSW | docker login -u $DOCKER_HUB_CREDS_USR --password-stdin
-                        docker push ${DOCKER_HUB_REPO}:${BUILD_NUMBER}
-                        docker push ${DOCKER_HUB_REPO}:latest
-                        docker logout
-                    '''
-                }
             }
         }
     }
 
     post {
         success {
-            echo "✅ Pipeline SUCCESS"
-            // Send notification
+            echo "✅ CD deployment successful"
         }
         failure {
-            echo "❌ Pipeline FAILED"
-            // Send notification
-        }
-        always {
-            sh 'docker logout'
-            cleanWs()
+            echo "❌ CD deployment failed"
         }
     }
 }
