@@ -7,6 +7,8 @@ pipeline {
         NAMESPACE        = 'pedinephro'
         TAG              = 'latest'
         K8S_CONTEXT      = 'kind-pedinephro-cluster'
+        K8S_REPO         = 'https://github.com/pediNephro/kubernetes-config.git'
+        K8S_MANIFEST     = '11-frontend.yaml'
     }
 
     stages {
@@ -34,18 +36,20 @@ pipeline {
                     set -e
                     kubectl config use-context ${K8S_CONTEXT}
 
-                    # Ensure namespace exists
-                    kubectl get namespace ${NAMESPACE} || kubectl create namespace ${NAMESPACE}
+                    # Clone the kubernetes-config repo into a temp folder
+                    rm -rf k8s-config
+                    git clone ${K8S_REPO} k8s-config
 
-                    # Apply manifests (creates or updates)
-                    kubectl apply -f k8s/frontend-deployment.yaml
+                    # Apply the manifest
+                    kubectl apply -f k8s-config/${K8S_MANIFEST}
 
-                    # Force the new image in case tag didn't change
+                    # Force image update in case :latest tag did not change
                     kubectl set image deployment/${SERVICE_NAME} \
                         ${SERVICE_NAME}=${DOCKER_HUB_REPO}:${TAG} \
                         -n ${NAMESPACE}
 
-                    kubectl rollout status deployment/${SERVICE_NAME} -n ${NAMESPACE} --timeout=120s
+                    kubectl rollout status deployment/${SERVICE_NAME} \
+                        -n ${NAMESPACE} --timeout=120s
                 '''
             }
         }
