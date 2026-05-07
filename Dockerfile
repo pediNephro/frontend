@@ -22,7 +22,7 @@ FROM nginx:1.27-alpine
 RUN rm -rf /etc/nginx/conf.d/*
 
 # Copy custom nginx configuration
-COPY nginx.conf /etc/nginx/nginx.conf
+COPY --from=builder /build/dist/ng-tailadmin/browser /usr/share/nginx/html
 COPY default.conf /etc/nginx/conf.d/default.conf
 
 # Copy built application from builder
