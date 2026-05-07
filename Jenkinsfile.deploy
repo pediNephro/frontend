@@ -6,7 +6,7 @@ pipeline {
         SERVICE_NAME     = 'frontend'
         NAMESPACE        = 'pedinephro'
         TAG              = 'latest'
-        K8S_CONTEXT      = 'kind-pedinephro-cluster'
+        K8S_CONTEXT = 'minikube'
         K8S_REPO         = 'https://github.com/pediNephro/kubernetes-config.git'
         K8S_MANIFEST     = '11-frontend.yaml'
     }
