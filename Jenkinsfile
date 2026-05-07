@@ -2,64 +2,51 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_HUB_REPO = 'azizos07/frontend'
-        SERVICE_NAME = 'frontend'
-        NAMESPACE = 'pedinephro'
-        TAG = 'latest'
-        K8S_CONTEXT = 'kind-pedinephro-cluster'
+        IMAGE_NAME = 'brahimbk/frontend'
+        IMAGE_TAG = 'latest'
     }
 
     stages {
 
-        stage('Pre-checks') {
+        stage('1 - Checkout') {
             steps {
-                sh '''
-                    set -e
-                    echo "Checking kubectl..."
-                    kubectl version --client
-
-                    echo "Checking cluster access..."
-                    kubectl config use-context ${K8S_CONTEXT}
-                    kubectl get nodes
-                '''
+                git branch: 'master',
+                    url: 'https://github.com/pediNephro/frontend.git',
+                    credentialsId: 'github-credentials'
+                echo 'Code pulled from GitHub'
             }
         }
 
-        stage('Deploy to Kubernetes') {
+        stage('2 - Docker Build') {
             steps {
-                sh '''
-                    set -e
-
-                    kubectl config use-context kind-pedinephro-cluster
-
-                    kubectl set image deployment/frontend \
-                        frontend=azizos07/frontend:latest \
-                        -n pedinephro
-
-                    kubectl rollout status deployment/frontend -n pedinephro
-                '''
+                sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
+                echo 'Docker image built'
             }
         }
 
-        stage('Verify') {
+        stage('3 - Docker Push') {
             steps {
-                sh '''
-                    echo "Pods:"
-                    kubectl get pods -n ${NAMESPACE} -l app=${SERVICE_NAME}
-
-                    echo "Service:"
-                    kubectl get svc -n ${NAMESPACE}
-                '''
+                withCredentials([usernamePassword(
+                    credentialsId: 'docker-hub-credentials',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
+                    sh "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
+                }
             }
         }
     }
 
     post {
         success {
-            echo "✅ CD deployment successful"
+            echo "Frontend image pushed: ${IMAGE_NAME}:${IMAGE_TAG}"
         }
         failure {
-            echo "❌ CD deployment failed"
+            echo "Pipeline failed"
+        }
+        always {
+            sh "docker rmi ${IMAGE_NAME}:${IMAGE_TAG} || true"
         }
     }
 }
