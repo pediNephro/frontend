@@ -10,7 +10,7 @@ pipeline {
 
         stage('1 - Checkout') {
             steps {
-                git branch: 'master',
+                git branch: 'frontB',
                     url: 'https://github.com/pediNephro/frontend.git',
                     credentialsId: 'github-credentials'
                 echo 'Code pulled from GitHub'
